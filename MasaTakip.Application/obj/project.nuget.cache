@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "cYIP2FqBkLE=",
+  "success": true,
+  "projectFilePath": "/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Application/MasaTakip.Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.extensions.configuration.abstractions/8.0.0/microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.identitymodel.abstractions/8.0.0/microsoft.identitymodel.abstractions.8.0.0.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.identitymodel.jsonwebtokens/8.0.0/microsoft.identitymodel.jsonwebtokens.8.0.0.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.identitymodel.logging/8.0.0/microsoft.identitymodel.logging.8.0.0.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.identitymodel.tokens/8.0.0/microsoft.identitymodel.tokens.8.0.0.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/system.identitymodel.tokens.jwt/8.0.0/system.identitymodel.tokens.jwt.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

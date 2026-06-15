@@ -1,0 +1,11 @@
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/bin/Debug/net8.0/MasaTakip.Domain.deps.json
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/bin/Debug/net8.0/MasaTakip.Domain.dll
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/bin/Debug/net8.0/MasaTakip.Domain.pdb
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.AssemblyInfoInputs.cache
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.AssemblyInfo.cs
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.csproj.CoreCompileInputs.cache
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.dll
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/refint/MasaTakip.Domain.dll
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.pdb
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/ref/MasaTakip.Domain.dll

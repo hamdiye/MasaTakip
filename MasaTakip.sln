@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasaTakip.Domain", "MasaTakip.Domain\MasaTakip.Domain.csproj", "{7A53EEF8-3C51-4E5F-A0AB-9AE9BCA0746C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasaTakip.Application", "MasaTakip.Application\MasaTakip.Application.csproj", "{3726CDE9-0B3D-4272-BA15-3FA9FD848450}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasaTakip.Infrastructure", "MasaTakip.Infrastructure\MasaTakip.Infrastructure.csproj", "{31E1BAB5-C618-4B2A-B47B-8FC9AC3C5C95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasaTakip.API", "MasaTakip.API\MasaTakip.API.csproj", "{17BAA59F-0B4F-4BF5-9C0E-1D910D54894B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A53EEF8-3C51-4E5F-A0AB-9AE9BCA0746C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A53EEF8-3C51-4E5F-A0AB-9AE9BCA0746C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A53EEF8-3C51-4E5F-A0AB-9AE9BCA0746C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A53EEF8-3C51-4E5F-A0AB-9AE9BCA0746C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3726CDE9-0B3D-4272-BA15-3FA9FD848450}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3726CDE9-0B3D-4272-BA15-3FA9FD848450}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3726CDE9-0B3D-4272-BA15-3FA9FD848450}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3726CDE9-0B3D-4272-BA15-3FA9FD848450}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31E1BAB5-C618-4B2A-B47B-8FC9AC3C5C95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31E1BAB5-C618-4B2A-B47B-8FC9AC3C5C95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31E1BAB5-C618-4B2A-B47B-8FC9AC3C5C95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31E1BAB5-C618-4B2A-B47B-8FC9AC3C5C95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17BAA59F-0B4F-4BF5-9C0E-1D910D54894B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17BAA59F-0B4F-4BF5-9C0E-1D910D54894B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17BAA59F-0B4F-4BF5-9C0E-1D910D54894B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17BAA59F-0B4F-4BF5-9C0E-1D910D54894B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
