@@ -1,5 +1,6 @@
 using MasaTakip.Application.DTOs.Common;
 using MasaTakip.Application.DTOs.Urun;
+using MasaTakip.Application.DTOs.Kategori;
 
 namespace MasaTakip.Application.Interfaces;
 
@@ -16,6 +17,30 @@ public interface IUrunService
 
     /// <summary>Creates a new product (without image). Use UploadGorselAsync to attach an image.</summary>
     Task<ApiResponse<UrunResponse>> UrunOlusturAsync(UrunOlusturRequest request);
+
+    /// <summary>
+    /// Updates an existing product details.
+    /// </summary>
+    /// <param name="id">Product ID.</param>
+    /// <param name="request">New product details.</param>
+    Task<ApiResponse<UrunResponse>> UrunGuncelleAsync(int id, UrunGuncelleRequest request);
+
+    /// <summary>
+    /// Deletes a product by its ID and removes its image if it exists.
+    /// </summary>
+    /// <param name="id">Product ID.</param>
+    Task<ApiResponse<bool>> UrunSilAsync(int id);
+
+    /// <summary>
+    /// Returns all categories from the database.
+    /// </summary>
+    Task<ApiResponse<List<KategoriResponse>>> GetTumKategorilerAsync();
+
+    /// <summary>
+    /// Creates a new category.
+    /// </summary>
+    /// <param name="request">Category details.</param>
+    Task<ApiResponse<KategoriResponse>> KategoriOlusturAsync(KategoriOlusturRequest request);
 
     /// <summary>
     /// Saves an uploaded image to disk and updates the product's GorselUrl.

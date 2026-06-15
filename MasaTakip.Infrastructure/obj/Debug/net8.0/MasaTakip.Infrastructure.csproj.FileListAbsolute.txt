@@ -17,3 +17,4 @@
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Infrastructure/obj/Debug/net8.0/MasaTakip.Infrastructure.pdb
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Infrastructure/obj/Debug/net8.0/MasaTakip.Infrastructure.genruntimeconfig.cache
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Infrastructure/obj/Debug/net8.0/ref/MasaTakip.Infrastructure.dll
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Infrastructure/obj/Debug/net8.0/MasaTakip.Infrastructure.sourcelink.json

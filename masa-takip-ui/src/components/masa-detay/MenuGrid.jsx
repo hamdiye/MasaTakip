@@ -45,11 +45,12 @@ export default function MenuGrid({ masaId }) {
       {/* Search */}
       <div className="px-4 py-2.5 border-b border-white/5">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           <input
             id="input-menu-ara"
             type="text"
-            className="input pl-8 text-xs py-2"
+            className="input text-xs py-2"
+            style={{ paddingLeft: '2.25rem' }}
             placeholder="Ürün ara..."
             value={aramaMetni}
             onChange={(e) => setAramaMetni(e.target.value)}

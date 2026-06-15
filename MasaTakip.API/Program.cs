@@ -23,6 +23,7 @@ builder.Services.AddScoped<IMasaService,    MasaService>();
 builder.Services.AddScoped<IAdisyonService, AdisyonService>();
 builder.Services.AddScoped<IAuthService,    AuthService>();
 builder.Services.AddScoped<IUrunService,    UrunService>();
+builder.Services.AddScoped<IRaporService,   RaporService>();
 
 // ─────────────────────────────────────────────
 // 3. JWT Authentication

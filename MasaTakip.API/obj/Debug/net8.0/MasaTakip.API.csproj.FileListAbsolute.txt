@@ -119,3 +119,4 @@
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.API/obj/Debug/net8.0/MasaTakip.API.genruntimeconfig.cache
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.API/obj/Debug/net8.0/ref/MasaTakip.API.dll
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.API/bin/Debug/net8.0/MasaTakip.API.staticwebassets.runtime.json
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.API/obj/Debug/net8.0/MasaTakip.API.sourcelink.json

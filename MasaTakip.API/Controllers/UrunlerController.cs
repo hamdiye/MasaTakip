@@ -85,4 +85,37 @@ public class UrunlerController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>Updates an existing product (Admin only).</summary>
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<UrunResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UrunResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<UrunResponse>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UrunGuncelle(int id, [FromBody] UrunGuncelleRequest request)
+    {
+        var result = await _urunService.UrunGuncelleAsync(id, request);
+        if (!result.Basarili)
+        {
+            return result.Mesaj!.Contains("bulunamadı")
+                ? NotFound(result)
+                : BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>Deletes a product (Admin only).</summary>
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UrunSil(int id)
+    {
+        var result = await _urunService.UrunSilAsync(id);
+        if (!result.Basarili)
+            return NotFound(result);
+
+        return Ok(result);
+    }
 }

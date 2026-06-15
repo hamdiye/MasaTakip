@@ -9,3 +9,4 @@
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/refint/MasaTakip.Domain.dll
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.pdb
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/ref/MasaTakip.Domain.dll
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Domain/obj/Debug/net8.0/MasaTakip.Domain.sourcelink.json

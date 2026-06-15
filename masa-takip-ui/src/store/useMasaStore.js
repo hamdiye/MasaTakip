@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { api } from '../utils/api'
+import useAuthStore from './useAuthStore'
 
 /**
  * Calculates the total price of a bill's line items.
@@ -16,6 +17,7 @@ const useMasaStore = create((set, get) => ({
   urunler: [],
   kategoriler: [{ id: 1, adi: 'Tümü' }],
   isLoading: false,
+  raporData: null,
 
   // ─── Getters (selector helpers) ─────────────────────────────────────────────
   /**
@@ -292,6 +294,147 @@ const useMasaStore = create((set, get) => ({
       }
     } catch (err) {
       console.error('urunKaldir error:', err)
+    }
+  },
+
+  /**
+   * Loads categories from the backend API.
+   */
+  loadKategoriler: async () => {
+    try {
+      const res = await api.get('/api/kategoriler')
+      if (res.basarili && res.data) {
+        const cats = [{ id: 1, adi: 'Tümü' }, ...res.data]
+        set({ kategoriler: cats })
+      }
+    } catch (err) {
+      console.error('loadKategoriler error:', err)
+    }
+  },
+
+  /**
+   * Adds a new category (Admin only).
+   */
+  kategoriEkleAdmin: async (adi) => {
+    try {
+      const res = await api.post('/api/kategoriler', { adi })
+      if (res.basarili) {
+        await get().loadKategoriler()
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Kategori eklenemedi.' }
+    } catch (err) {
+      console.error('kategoriEkleAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Creates a new product and optionally uploads its image (Admin only).
+   */
+  urunEkleAdmin: async (urunRequest, imageFile) => {
+    try {
+      const res = await api.post('/api/urunler', urunRequest)
+      if (!res.basarili || !res.data) {
+        return { success: false, message: res.mesaj || 'Ürün eklenemedi.' }
+      }
+
+      const createdUrun = res.data
+
+      if (imageFile) {
+        const formData = new FormData()
+        formData.append('dosya', imageFile)
+
+        const state = useAuthStore.getState()
+        const token = state.user?.token
+        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5115'}/api/urunler/${createdUrun.id}/gorsel`, {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          body: formData
+        })
+
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}))
+          return { success: true, warning: errData.mesaj || 'Ürün eklendi fakat görsel yüklenemedi.' }
+        }
+      }
+
+      await get().loadUrunler()
+      return { success: true }
+    } catch (err) {
+      console.error('urunEkleAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Updates an existing product and optionally replaces its image (Admin only).
+   */
+  urunGuncelleAdmin: async (id, urunRequest, imageFile) => {
+    try {
+      const res = await api.put(`/api/urunler/${id}`, urunRequest)
+      if (!res.basarili) {
+        return { success: false, message: res.mesaj || 'Ürün güncellenemedi.' }
+      }
+
+      if (imageFile) {
+        const formData = new FormData()
+        formData.append('dosya', imageFile)
+
+        const state = useAuthStore.getState()
+        const token = state.user?.token
+        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5115'}/api/urunler/${id}/gorsel`, {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          body: formData
+        })
+
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}))
+          return { success: true, warning: errData.mesaj || 'Ürün bilgileri güncellendi fakat yeni görsel yüklenemedi.' }
+        }
+      }
+
+      await get().loadUrunler()
+      return { success: true }
+    } catch (err) {
+      console.error('urunGuncelleAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Deletes a product (Admin only).
+   */
+  urunSilAdmin: async (id) => {
+    try {
+      const res = await api.delete(`/api/urunler/${id}`)
+      if (res.basarili) {
+        await get().loadUrunler()
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Ürün silinemedi.' }
+    } catch (err) {
+      console.error('urunSilAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Loads reporting statistics (ciro, payment distribution, popular items, recent sales)
+   */
+  loadRaporlar: async () => {
+    set({ isLoading: true })
+    try {
+      const res = await api.get('/api/rapor/ozet')
+      if (res.basarili && res.data) {
+        set({ raporData: res.data, isLoading: false })
+      } else {
+        set({ isLoading: false })
+      }
+    } catch (err) {
+      console.error('loadRaporlar error:', err)
+      set({ isLoading: false })
     }
   },
 }))

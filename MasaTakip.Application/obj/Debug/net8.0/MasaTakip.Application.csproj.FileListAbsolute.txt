@@ -13,3 +13,4 @@
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Application/obj/Debug/net8.0/refint/MasaTakip.Application.dll
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Application/obj/Debug/net8.0/MasaTakip.Application.pdb
 /Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Application/obj/Debug/net8.0/ref/MasaTakip.Application.dll
+/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.Application/obj/Debug/net8.0/MasaTakip.Application.sourcelink.json

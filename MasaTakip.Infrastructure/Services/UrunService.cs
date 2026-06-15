@@ -1,5 +1,6 @@
 using MasaTakip.Application.DTOs.Common;
 using MasaTakip.Application.DTOs.Urun;
+using MasaTakip.Application.DTOs.Kategori;
 using MasaTakip.Application.Interfaces;
 using MasaTakip.Domain.Entities;
 using MasaTakip.Infrastructure.Data;
@@ -133,6 +134,109 @@ public class UrunService : IUrunService
         await _context.SaveChangesAsync();
 
         return ApiResponse<UrunResponse>.Basari(MapToResponse(urun), "Görsel başarıyla yüklendi.");
+    }
+
+    /// <summary>
+    /// Updates product details in the database.
+    /// </summary>
+    public async Task<ApiResponse<UrunResponse>> UrunGuncelleAsync(int id, UrunGuncelleRequest request)
+    {
+        var urun = await _context.Urunler
+            .Include(u => u.Kategori)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (urun is null)
+            return ApiResponse<UrunResponse>.Hata($"Ürün bulunamadı. Id: {id}");
+
+        var kategoriVarMi = await _context.Kategoriler.AnyAsync(k => k.Id == request.KategoriId);
+        if (!kategoriVarMi)
+            return ApiResponse<UrunResponse>.Hata($"Kategori bulunamadı. Id: {request.KategoriId}");
+
+        urun.Adi = request.Adi;
+        urun.Fiyat = request.Fiyat;
+        urun.KategoriId = request.KategoriId;
+
+        await _context.SaveChangesAsync();
+
+        await _context.Entry(urun).Reference(u => u.Kategori).LoadAsync();
+
+        return ApiResponse<UrunResponse>.Basari(MapToResponse(urun), "Ürün güncellendi.");
+    }
+
+    /// <summary>
+    /// Deletes a product and cleans up its stored image file if exists.
+    /// </summary>
+    public async Task<ApiResponse<bool>> UrunSilAsync(int id)
+    {
+        var urun = await _context.Urunler.FindAsync(id);
+        if (urun is null)
+            return ApiResponse<bool>.Hata("Ürün bulunamadı.");
+
+        if (!string.IsNullOrEmpty(urun.GorselUrl))
+        {
+            var kayitKlasoru = Path.Combine(_env.ContentRootPath, "wwwroot", "images", "urunler");
+            var dosyaAdi = Path.GetFileName(urun.GorselUrl);
+            var dosyaYolu = Path.Combine(kayitKlasoru, dosyaAdi);
+            if (File.Exists(dosyaYolu))
+            {
+                try
+                {
+                    File.Delete(dosyaYolu);
+                }
+                catch (Exception)
+                {
+                    // Ignore image file deletion errors
+                }
+            }
+        }
+
+        _context.Urunler.Remove(urun);
+        await _context.SaveChangesAsync();
+
+        return ApiResponse<bool>.Basari(true, "Ürün silindi.");
+    }
+
+    /// <summary>
+    /// Gets all categories ordered by name.
+    /// </summary>
+    public async Task<ApiResponse<List<KategoriResponse>>> GetTumKategorilerAsync()
+    {
+        var kategoriler = await _context.Kategoriler
+            .OrderBy(k => k.Adi)
+            .Select(k => new KategoriResponse
+            {
+                Id = k.Id,
+                Adi = k.Adi
+            })
+            .ToListAsync();
+
+        return ApiResponse<List<KategoriResponse>>.Basari(kategoriler);
+    }
+
+    /// <summary>
+    /// Creates a new category checking for duplicates.
+    /// </summary>
+    public async Task<ApiResponse<KategoriResponse>> KategoriOlusturAsync(KategoriOlusturRequest request)
+    {
+        var varMi = await _context.Kategoriler.AnyAsync(k => k.Adi.ToLower() == request.Adi.ToLower());
+        if (varMi)
+            return ApiResponse<KategoriResponse>.Hata("Bu kategori zaten mevcut.");
+
+        var kategori = new Kategori
+        {
+            Adi = request.Adi
+        };
+
+        await _context.Kategoriler.AddAsync(kategori);
+        await _context.SaveChangesAsync();
+
+        var response = new KategoriResponse
+        {
+            Id = kategori.Id,
+            Adi = kategori.Adi
+        };
+
+        return ApiResponse<KategoriResponse>.Basari(response, "Kategori oluşturuldu.");
     }
 
     /// <summary>Maps a Urun entity to its response DTO.</summary>

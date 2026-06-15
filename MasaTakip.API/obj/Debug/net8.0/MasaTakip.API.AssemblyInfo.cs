@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MasaTakip.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+be16249aa9637f9f0a6a01dff4bd2b15093688bd")]
 [assembly: System.Reflection.AssemblyProductAttribute("MasaTakip.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MasaTakip.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
