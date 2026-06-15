@@ -1,0 +1,31 @@
+# Version control
+.git
+.gitignore
+
+# Docker configuration
+.dockerignore
+docker-compose*
+Dockerfile*
+
+# .NET Build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# Node/React dependencies and builds
+**/node_modules/
+**/dist/
+**/.env*
+
+# IDEs and local configurations
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Miscellaneous
+Thumbs.db
+.DS_Store
