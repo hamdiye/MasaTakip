@@ -25,41 +25,42 @@ Canlı Ortam (Production) Kurulum ve Güncelleme Kılavuzu
         4. Masaüstünde yer alan Sistemi_Baslat.bat scripti çalıştırılarak güncel sistem ayağa kaldırılır.
 
 3.Otomasyon Scriptleri ve Yapılandırma Dosyaları
-  3.1. Sunucu docker-compose.yml İçeriği
-    version: '3.8'
-    services:
-      db:
-        image: postgres:15-alpine
-        container_name: masatakip-db
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: MasaTakipDb
-        ports:
-          - "5432:5432"
-        volumes:
-          - pgdata:/var/lib/postgresql/data
-        restart: always
-    volumes:
-      pgdata:
-  3.2. Masaüstü Başlatma Scripti (Sistemi_Baslat.bat)
-    @echo off
-    :: Docker veritabanı servisini başlatır (çalışıyorsa atlar)
-    docker compose -f C:\HesapLokal\docker-compose.yml up -d
-    :: .NET uygulamasını ve gömülü web arayüzünü tetikler
-    start C:\HesapLokal\Backend\MasaTakip.API.exe
-  3.3. Sunucu appsettings.json Port Konfigürasyonu
-    Uygulamanın istemci (Frontend) istekleriyle tam uyumlu çalışabilmesi için Backend/appsettings.json dosyasında Kestrel ayarı 
-    sabitlenmelidir:
-      {
-        "ConnectionStrings": {
-          "DefaultConnection": "Server=localhost;Port=5432;Database=HesapLokalDb;User Id=restoran_admin;Password=GucluSifre123!;Maximum Pool Size=30;"
-        },
-        "Kestrel": {
-          "Endpoints": {
-            "Http": {
-              "Url": "http://*:5115"
+   3.1. Sunucu docker-compose.yml İçeriği
+      version: '3.8'
+      services:
+        db:
+          image: postgres:15-alpine
+          container_name: masatakip-db
+          environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: MasaTakipDb
+          ports:
+            - "5432:5432"
+          volumes:
+            - pgdata:/var/lib/postgresql/data
+          restart: always
+      volumes:
+        pgdata:
+   3.2. Masaüstü Başlatma Scripti (Sistemi_Baslat.bat)
+      @echo off
+      :: Docker veritabanı servisini başlatır (çalışıyorsa atlar)
+      docker compose -f C:\HesapLokal\docker-compose.yml up -d
+      :: .NET uygulamasını ve gömülü web arayüzünü tetikler
+      start C:\HesapLokal\Backend\MasaTakip.API.exe
+   3.3. Sunucu appsettings.json Port Konfigürasyonu
+      Uygulamanın istemci (Frontend) istekleriyle tam uyumlu çalışabilmesi için Backend/appsettings.json dosyasında Kestrel ayarı 
+      sabitlenmelidir:
+          {
+            "ConnectionStrings": {
+              "DefaultConnection": "Server=localhost;Port=5432;Database=HesapLokalDb;UserId=restoran_admin;
+              Password=GucluSifre123!;Maximum Pool Size=30;"
+            },
+            "Kestrel": {
+              "Endpoints": {
+                "Http": {
+                  "Url": "http://*:5115"
+                }
+              }
             }
           }
-        }
-      }
