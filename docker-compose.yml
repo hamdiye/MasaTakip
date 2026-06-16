@@ -42,7 +42,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://192.168.1.50:5173/api
+      VITE_API_URL: http://localhost:5173/api
     volumes:
       - ./masa-takip-ui:/app
       - /app/node_modules
