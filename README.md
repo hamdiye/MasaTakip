@@ -24,7 +24,7 @@ Canlı Ortam (Production) Kurulum ve Güncelleme Kılavuzu
         3. Kaynak bilgisayardan getirilen yeni ve güncel Backend klasörü aynı dizine yapıştırılır.
         4. Masaüstünde yer alan Sistemi_Baslat.bat scripti çalıştırılarak güncel sistem ayağa kaldırılır.
 
-3.Otomasyon Scriptleri ve Yapılandırma Dosyaları
+3. Otomasyon Scriptleri ve Yapılandırma Dosyaları
    3.1. Sunucu docker-compose.yml İçeriği
       version: '3.8'
       services:
