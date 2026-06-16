@@ -11,4 +11,7 @@ public class MasaResponse
     public string Adi { get; init; } = string.Empty;
     public string Durum { get; init; } = string.Empty;
     public bool DoluMu => Durum == nameof(MasaDurum.Dolu);
+
+    /// <summary>Gets the current total price of the active bill for the table.</summary>
+    public decimal ToplamTutar { get; init; }
 }

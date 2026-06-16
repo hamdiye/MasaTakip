@@ -6,6 +6,7 @@ import MasaDetayPage  from './pages/MasaDetayPage'
 import MenuYonetimPage from './pages/MenuYonetimPage'
 import RaporPage      from './pages/RaporPage'
 import LoginPage      from './pages/LoginPage'
+import KullaniciYonetimPage from './pages/KullaniciYonetimPage'
 import useAuthStore   from './store/useAuthStore'
 
 /**
@@ -27,15 +28,13 @@ function ProtectedLayout() {
       <Navbar />
 
       {/* Page content */}
-      <main
-        className="flex flex-col flex-1 min-h-0 overflow-hidden"
-        style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
-      >
+      <main className="main-content">
         <Routes>
           <Route path="/"          element={<MasalarPage />}     />
           <Route path="/masa/:id"  element={<MasaDetayPage />}   />
           <Route path="/menu"      element={<MenuYonetimPage />}  />
           <Route path="/rapor"     element={<RaporPage />}        />
+          <Route path="/kullanicilar" element={<KullaniciYonetimPage />} />
           <Route path="*"          element={<Navigate to="/" replace />} />
         </Routes>
       </main>

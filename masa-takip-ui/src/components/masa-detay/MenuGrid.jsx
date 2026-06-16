@@ -30,7 +30,7 @@ export default function MenuGrid({ masaId }) {
   }, [aktifKategoriId, aramaMetni])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Panel Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
         <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">

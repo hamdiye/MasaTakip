@@ -16,7 +16,7 @@ export default function AdisyonListesi({ masaId }) {
 
   return (
     <div
-      className="flex flex-col h-full"
+      className="flex flex-col flex-1 min-h-0"
       style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}
     >
       {/* Header */}

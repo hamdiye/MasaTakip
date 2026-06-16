@@ -42,4 +42,49 @@ public class KullanicilarController : ControllerBase
 
         return CreatedAtAction(nameof(GetTumKullanicilar), result);
     }
+
+    /// <summary>Updates an existing user details (Admin only). The default admin (ID = 1) can only be updated by themselves.</summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(ApiResponse<KullaniciResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<KullaniciResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<KullaniciResponse>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> KullaniciGuncelle(int id, [FromBody] KullaniciGuncelleRequest request)
+    {
+        var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(currentUserIdClaim, out int currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _authService.KullaniciGuncelleAsync(id, request, currentUserId);
+        if (!result.Basarili)
+        {
+            {
+                return result.Mesaj!.Contains("bulunamadı")
+                    ? NotFound(result)
+                    : BadRequest(result);
+            }
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>Deletes a user or deactivates them (Admin only). The default admin (ID = 1) cannot be deleted.</summary>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> KullaniciSil(int id)
+    {
+        var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(currentUserIdClaim, out int currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _authService.KullaniciSilAsync(id, currentUserId);
+        if (!result.Basarili)
+            return NotFound(result);
+
+        return Ok(result);
+    }
 }

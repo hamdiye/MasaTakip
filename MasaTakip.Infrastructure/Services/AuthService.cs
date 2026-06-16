@@ -7,6 +7,7 @@ using MasaTakip.Application.DTOs.Common;
 using MasaTakip.Application.DTOs.Kullanici;
 using MasaTakip.Application.Interfaces;
 using MasaTakip.Domain.Entities;
+using MasaTakip.Domain.Enums;
 using MasaTakip.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -134,6 +135,86 @@ public class AuthService : IAuthService
             signingCredentials: creds);
 
         return (new JwtSecurityTokenHandler().WriteToken(token), expiry);
+    }
+
+    /// <summary>Updates details of an existing user (Admin only). The default admin (ID = 1) can only be updated by themselves.</summary>
+    public async Task<ApiResponse<KullaniciResponse>> KullaniciGuncelleAsync(int id, KullaniciGuncelleRequest request, int currentUserId)
+    {
+        var kullanici = await _context.Kullanicilar.FindAsync(id);
+        if (kullanici is null)
+            return ApiResponse<KullaniciResponse>.Hata("Kullanıcı bulunamadı.");
+
+        // Check rules for the default first admin (ID = 1)
+        if (id == 1)
+        {
+            if (currentUserId != 1)
+                return ApiResponse<KullaniciResponse>.Hata("İlk yönetici hesabı sadece kendisi tarafından güncellenebilir.");
+
+            if (request.Rol != KullaniciRol.Admin)
+                return ApiResponse<KullaniciResponse>.Hata("İlk yöneticinin yetkisi değiştirilemez.");
+
+            if (!request.AktifMi)
+                return ApiResponse<KullaniciResponse>.Hata("İlk yönetici pasif duruma getirilemez.");
+        }
+
+        // Check PIN collision if PIN is updated
+        if (!string.IsNullOrEmpty(request.PinCode))
+        {
+            var digerleri = await _context.Kullanicilar
+                .Where(k => k.Id != id && k.AktifMi)
+                .ToListAsync();
+
+            var cakismaVarMi = digerleri.Any(k => BCryptNet.Verify(request.PinCode, k.PinCodeHashed));
+            if (cakismaVarMi)
+                return ApiResponse<KullaniciResponse>.Hata("Bu PIN kodu başka bir kullanıcı tarafından kullanılıyor.");
+
+            kullanici.PinCodeHashed = BCryptNet.HashPassword(request.PinCode);
+        }
+
+        kullanici.Isim = request.Isim;
+        kullanici.Rol = request.Rol;
+        kullanici.AktifMi = request.AktifMi;
+
+        await _context.SaveChangesAsync();
+
+        return ApiResponse<KullaniciResponse>.Basari(MapToResponse(kullanici), "Kullanıcı güncellendi.");
+    }
+
+    /// <summary>Deletes a user or deactivates them if they have historical records (Admin only). The default admin (ID = 1) cannot be deleted.</summary>
+    public async Task<ApiResponse<bool>> KullaniciSilAsync(int id, int currentUserId)
+    {
+        var kullanici = await _context.Kullanicilar.FindAsync(id);
+        if (kullanici is null)
+            return ApiResponse<bool>.Hata("Kullanıcı bulunamadı.");
+
+        // Check rules for the default first admin (ID = 1)
+        if (id == 1)
+            return ApiResponse<bool>.Hata("İlk yönetici hesabı silinemez.");
+
+        // Prevent users from deleting themselves
+        if (id == currentUserId)
+            return ApiResponse<bool>.Hata("Kendi hesabınızı silemezsiniz.");
+
+        // Check if there are active bills or historical data
+        var hasAdisyon = await _context.Adisyonlar
+            .AnyAsync(a => a.OlusturanKullaniciId == id || a.KapatanKullaniciId == id);
+
+        var hasAdisyonDetay = await _context.AdisyonDetaylar
+            .AnyAsync(ad => ad.EkleyenKullaniciId == id);
+
+        if (hasAdisyon || hasAdisyonDetay)
+        {
+            // Soft delete - deactivate the user to preserve historical database integrity
+            kullanici.AktifMi = false;
+            await _context.SaveChangesAsync();
+            return ApiResponse<bool>.Basari(true, "Kullanıcı geçmiş işlem kayıtları nedeniyle pasif duruma getirildi.");
+        }
+
+        // Hard delete - remove completely if no historical records exist
+        _context.Kullanicilar.Remove(kullanici);
+        await _context.SaveChangesAsync();
+
+        return ApiResponse<bool>.Basari(true, "Kullanıcı başarıyla silindi.");
     }
 
     /// <summary>Maps a Kullanici entity to its response DTO.</summary>

@@ -18,6 +18,7 @@ const useMasaStore = create((set, get) => ({
   kategoriler: [{ id: 1, adi: 'Tümü' }],
   isLoading: false,
   raporData: null,
+  kullanicilar: [],
 
   // ─── Getters (selector helpers) ─────────────────────────────────────────────
   /**
@@ -29,12 +30,16 @@ const useMasaStore = create((set, get) => ({
   },
 
   /**
-   * Returns the total bill amount for a table.
+   * Returns the total bill amount for a table. Fallbacks to table's loaded total if details are not yet loaded.
    * @param {number} masaId
    */
   getMasaToplamTutar: (masaId) => {
-    const detaylar = get().adisyonlar[masaId] ?? []
-    return hesaplaToplamTutar(detaylar)
+    const detaylar = get().adisyonlar[masaId]
+    if (detaylar !== undefined) {
+      return hesaplaToplamTutar(detaylar)
+    }
+    const masa = get().masalar.find((m) => m.id === masaId)
+    return masa?.toplamTutar ?? 0
   },
 
   // ─── Actions ────────────────────────────────────────────────────────────────
@@ -51,6 +56,7 @@ const useMasaStore = create((set, get) => ({
           id: m.id,
           adi: m.adi,
           durum: m.durum, // 'Bos' | 'Dolu'
+          toplamTutar: m.toplamTutar || 0,
         }))
         set({ masalar: masalarMapped, isLoading: false })
       } else {
@@ -435,6 +441,75 @@ const useMasaStore = create((set, get) => ({
     } catch (err) {
       console.error('loadRaporlar error:', err)
       set({ isLoading: false })
+    }
+  },
+
+  /**
+   * Loads all users (Admin only)
+   */
+  loadKullanicilar: async () => {
+    set({ isLoading: true })
+    try {
+      const res = await api.get('/api/kullanicilar')
+      if (res.basarili && res.data) {
+        set({ kullanicilar: res.data, isLoading: false })
+      } else {
+        set({ isLoading: false })
+      }
+    } catch (err) {
+      console.error('loadKullanicilar error:', err)
+      set({ isLoading: false })
+    }
+  },
+
+  /**
+   * Adds a new user (Admin only)
+   */
+  kullaniciEkleAdmin: async (kullaniciRequest) => {
+    try {
+      const res = await api.post('/api/kullanicilar', kullaniciRequest)
+      if (res.basarili) {
+        await get().loadKullanicilar()
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Kullanıcı eklenemedi.' }
+    } catch (err) {
+      console.error('kullaniciEkleAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Updates an existing user (Admin only)
+   */
+  kullaniciGuncelleAdmin: async (id, kullaniciRequest) => {
+    try {
+      const res = await api.put(`/api/kullanicilar/${id}`, kullaniciRequest)
+      if (res.basarili) {
+        await get().loadKullanicilar()
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Kullanıcı güncellenemedi.' }
+    } catch (err) {
+      console.error('kullaniciGuncelleAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Deletes a user (Admin only)
+   */
+  kullaniciSilAdmin: async (id) => {
+    try {
+      const res = await api.delete(`/api/kullanicilar/${id}`)
+      if (res.basarili) {
+        await get().loadKullanicilar()
+        return { success: true, message: res.mesaj }
+      }
+      return { success: false, message: res.mesaj || 'Kullanıcı silinemedi.' }
+    } catch (err) {
+      console.error('kullaniciSilAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
     }
   },
 }))
