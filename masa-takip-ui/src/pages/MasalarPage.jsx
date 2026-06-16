@@ -1,8 +1,10 @@
 import { useMemo, useState, useEffect } from 'react'
-import { LayoutGrid, Users, CheckCircle2 } from 'lucide-react'
+import { LayoutGrid, Users, CheckCircle2, AlertCircle } from 'lucide-react'
 import MasaGrid from '../components/masalar/MasaGrid'
 import MasaEkleModal from '../components/masalar/MasaEkleModal'
 import useMasaStore from '../store/useMasaStore'
+import useAuthStore from '../store/useAuthStore'
+import Modal from '../components/common/Modal'
 
 /**
  * Home / Dashboard page. Shows all tables and their status.
@@ -10,11 +12,39 @@ import useMasaStore from '../store/useMasaStore'
 export default function MasalarPage() {
   const masalar = useMasaStore((s) => s.masalar)
   const loadMasalar = useMasaStore((s) => s.loadMasalar)
+  const deleteMasa = useMasaStore((s) => s.masaSilAdmin)
+  const user = useAuthStore((s) => s.user)
+  const isAdmin = user?.rol === 'Admin'
+
   const [filtre, setFiltre] = useState('Tumu') // 'Tumu' | 'Dolu' | 'Bos'
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [selectedMasa, setSelectedMasa] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
+  const [isDeletePending, setIsDeletePending] = useState(false)
 
   useEffect(() => {
     loadMasalar()
   }, [loadMasalar])
+
+  const handleDeleteClick = (masa) => {
+    setSelectedMasa(masa)
+    setDeleteError('')
+    setIsDeleteOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedMasa) return
+    setDeleteError('')
+    setIsDeletePending(true)
+    const res = await deleteMasa(selectedMasa.id)
+    setIsDeletePending(false)
+    if (res && res.success) {
+      setIsDeleteOpen(false)
+      setSelectedMasa(null)
+    } else {
+      setDeleteError(res?.message || 'Masa silinemedi.')
+    }
+  }
 
   const istatistik = useMemo(() => ({
     toplam: masalar.length,
@@ -38,7 +68,7 @@ export default function MasalarPage() {
             {new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-        <MasaEkleModal />
+        {isAdmin && <MasaEkleModal />}
       </div>
 
       {/* ── Stats Row ─────────────────────────────────────────── */}
@@ -109,8 +139,46 @@ export default function MasalarPage() {
 
       {/* ── Table Grid ────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        <MasaGrid masalar={filtreliMasalar} />
+        <MasaGrid masalar={filtreliMasalar} onDeleteMasa={handleDeleteClick} />
       </div>
+
+      {/* ─── MODAL: Delete Table Confirmation ───────────────── */}
+      <Modal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        title="Masayı Sil"
+      >
+        <div className="flex flex-col gap-4">
+          {deleteError && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <span>{deleteError}</span>
+            </div>
+          )}
+
+          <p className="text-sm text-slate-300">
+            <strong className="text-white">{selectedMasa?.adi}</strong> isimli masayı silmek istediğinize emin misiniz?
+          </p>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/5 mt-2">
+            <button
+              type="button"
+              onClick={() => setIsDeleteOpen(false)}
+              className="btn btn-ghost text-xs"
+              disabled={isDeletePending}
+            >
+              Vazgeç
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              className="btn bg-red-600 hover:bg-red-700 text-white min-w-[100px] text-xs"
+              disabled={isDeletePending}
+            >
+              {isDeletePending ? 'Siliniyor...' : 'Evet, Sil'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

@@ -9,7 +9,7 @@ import useMasaStore from '../../store/useMasaStore'
  * @param {number} masaId - Table ID to add products to
  */
 export default function MenuGrid({ masaId }) {
-  const [aktifKategoriId, setAktifKategoriId] = useState(1) // 1 = Tümü
+  const [aktifKategoriId, setAktifKategoriId] = useState(0) // 0 = Tümü
   const [aramaMetni, setAramaMetni]           = useState('')
   const urunEkle = useMasaStore((s) => s.urunEkle)
   const urunler = useMasaStore((s) => s.urunler)
@@ -17,8 +17,8 @@ export default function MenuGrid({ masaId }) {
 
   const filtreliUrunler = useMemo(() => {
     let liste = urunler
-    // Kategori filtresi (1 = Tümü)
-    if (aktifKategoriId !== 1) {
+    // Kategori filtresi (0 = Tümü)
+    if (aktifKategoriId !== 0) {
       liste = liste.filter((u) => u.kategoriId === aktifKategoriId)
     }
     // Arama filtresi
@@ -27,7 +27,7 @@ export default function MenuGrid({ masaId }) {
       liste = liste.filter((u) => u.adi.toLowerCase().includes(term))
     }
     return liste
-  }, [aktifKategoriId, aramaMetni])
+  }, [aktifKategoriId, aramaMetni, urunler])
 
   return (
     <div className="flex flex-col flex-1 min-h-0">

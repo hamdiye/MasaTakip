@@ -18,15 +18,19 @@ export default function MasaEkleModal() {
     setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const trimmed = masaAdi.trim()
     if (!trimmed) {
       setError('Masa adı boş olamaz.')
       return
     }
-    masaEkle(trimmed)
-    handleClose()
+    const res = await masaEkle(trimmed)
+    if (res && res.success) {
+      handleClose()
+    } else {
+      setError(res?.message || 'Masa eklenemedi.')
+    }
   }
 
   return (

@@ -1,15 +1,19 @@
 import { useNavigate } from 'react-router-dom'
-import { Users, ArrowRight } from 'lucide-react'
+import { Users, ArrowRight, Trash2 } from 'lucide-react'
+import useAuthStore from '../../store/useAuthStore'
 import clsx from 'clsx'
 
 /**
  * Single table card showing table name, status, and current bill total.
  * @param {{ id, adi, durum }} masa - Table data
  * @param {number} toplamTutar - Current bill total (0 if empty)
+ * @param {function} onDelete - Callback when table is deleted
  */
-export default function MasaKarti({ masa, toplamTutar }) {
+export default function MasaKarti({ masa, toplamTutar, onDelete }) {
   const navigate = useNavigate()
   const isDolu = masa.durum === 'Dolu'
+  const user = useAuthStore((s) => s.user)
+  const isAdmin = user?.rol === 'Admin'
 
   return (
     <button
@@ -40,7 +44,7 @@ export default function MasaKarti({ masa, toplamTutar }) {
       />
 
       {/* Status indicator dot */}
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-3.5 left-3.5">
         <span
           className={clsx(
             'block w-2.5 h-2.5 rounded-full',
@@ -53,6 +57,20 @@ export default function MasaKarti({ masa, toplamTutar }) {
           }}
         />
       </div>
+
+      {/* Delete button: visible to Admin, absolute top-2 right-2 */}
+      {isAdmin && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(masa)
+          }}
+          className="absolute top-2 right-2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-white/5 bg-white/5 transition-all z-20 cursor-pointer"
+          title="Masayı Sil"
+        >
+          <Trash2 size={12} />
+        </div>
+      )}
 
       {/* Icon */}
       <div className={clsx(

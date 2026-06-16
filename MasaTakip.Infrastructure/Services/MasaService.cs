@@ -1,6 +1,7 @@
 using MasaTakip.Application.DTOs.Common;
 using MasaTakip.Application.DTOs.Masa;
 using MasaTakip.Application.Interfaces;
+using MasaTakip.Domain.Entities;
 using MasaTakip.Domain.Enums;
 using MasaTakip.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -37,5 +38,52 @@ public class MasaService : IMasaService
             .ToListAsync();
 
         return ApiResponse<List<MasaResponse>>.Basari(masalar);
+    }
+
+    /// <summary>Creates a new table in the system. Checks for duplicate names.</summary>
+    public async Task<ApiResponse<MasaResponse>> MasaEkleAsync(MasaEkleRequest request)
+    {
+        var exists = await _context.Masalar
+            .AnyAsync(m => m.Adi.ToLower() == request.Adi.Trim().ToLower());
+
+        if (exists)
+            return ApiResponse<MasaResponse>.Hata("Bu isimde bir masa zaten mevcut.");
+
+        var masa = new Masa
+        {
+            Adi   = request.Adi.Trim(),
+            Durum = MasaDurum.Bos
+        };
+
+        await _context.Masalar.AddAsync(masa);
+        await _context.SaveChangesAsync();
+
+        var response = new MasaResponse
+        {
+            Id          = masa.Id,
+            Adi         = masa.Adi,
+            Durum       = masa.Durum.ToString(),
+            ToplamTutar = 0
+        };
+
+        return ApiResponse<MasaResponse>.Basari(response, "Masa başarıyla eklendi.");
+    }
+
+    /// <summary>Deletes a table by ID (Admin only). Returns error if table has historical or active bills.</summary>
+    public async Task<ApiResponse<bool>> MasaSilAsync(int id)
+    {
+        var masa = await _context.Masalar.FindAsync(id);
+        if (masa is null)
+            return ApiResponse<bool>.Hata("Masa bulunamadı.");
+
+        // Check if table has any bills
+        var hasAdisyon = await _context.Adisyonlar.AnyAsync(a => a.MasaId == id);
+        if (hasAdisyon)
+            return ApiResponse<bool>.Hata("Bu masaya ait geçmiş veya aktif sipariş kayıtları bulunmaktadır. Bu nedenle silinemez.");
+
+        _context.Masalar.Remove(masa);
+        await _context.SaveChangesAsync();
+
+        return ApiResponse<bool>.Basari(true, "Masa başarıyla silindi.");
     }
 }

@@ -29,4 +29,37 @@ public class MasalarController : ControllerBase
         var result = await _masaService.GetTumMasalarAsync();
         return Ok(result);
     }
+
+    /// <summary>Creates a new table in the system (Admin only).</summary>
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<MasaResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<MasaResponse>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> MasaEkle([FromBody] MasaEkleRequest request)
+    {
+        var result = await _masaService.MasaEkleAsync(request);
+        if (!result.Basarili)
+            return BadRequest(result);
+
+        return CreatedAtAction(nameof(GetTumMasalar), result);
+    }
+
+    /// <summary>Deletes a table by ID (Admin only).</summary>
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MasaSil(int id)
+    {
+        var result = await _masaService.MasaSilAsync(id);
+        if (!result.Basarili)
+        {
+            return result.Mesaj!.Contains("bulunamadı")
+                ? NotFound(result)
+                : BadRequest(result);
+        }
+
+        return Ok(result);
+    }
 }

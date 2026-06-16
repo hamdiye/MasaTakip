@@ -23,6 +23,7 @@ public class KategorilerController : ControllerBase
 
     /// <summary>Returns all categories.</summary>
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<List<KategoriResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetTumKategoriler()
     {

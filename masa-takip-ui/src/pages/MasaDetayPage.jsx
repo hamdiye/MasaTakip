@@ -25,6 +25,7 @@ export default function MasaDetayPage() {
   const masalar = useMasaStore((s) => s.masalar)
   const loadMasalar = useMasaStore((s) => s.loadMasalar)
   const loadUrunler = useMasaStore((s) => s.loadUrunler)
+  const loadKategoriler = useMasaStore((s) => s.loadKategoriler)
   const loadAktifAdisyon = useMasaStore((s) => s.loadAktifAdisyon)
 
   const masa    = masalar.find((m) => m.id === masaId)
@@ -34,8 +35,9 @@ export default function MasaDetayPage() {
       loadMasalar()
     }
     loadUrunler()
+    loadKategoriler()
     loadAktifAdisyon(masaId)
-  }, [masaId, loadMasalar, loadUrunler, loadAktifAdisyon, masalar.length])
+  }, [masaId, loadMasalar, loadUrunler, loadKategoriler, loadAktifAdisyon, masalar.length])
 
   if (!masa) {
     return (

@@ -33,7 +33,7 @@ export default function MenuYonetimPage() {
   const isAdmin = user?.rol === 'Admin'
 
   // Filter and search state
-  const [aktifKategoriId, setAktifKategoriId] = useState(1) // 1 is "Tümü"
+  const [aktifKategoriId, setAktifKategoriId] = useState(0) // 0 is "Tümü"
   const [searchQuery, setSearchQuery] = useState('')
 
   // Modals state
@@ -69,7 +69,7 @@ export default function MenuYonetimPage() {
 
   // Reset category dropdown default when categories load or change
   useEffect(() => {
-    const validCats = kategoriler.filter(c => c.id !== 1)
+    const validCats = kategoriler.filter(c => c.id !== 0)
     if (validCats.length > 0 && !urunForm.kategoriId) {
       setUrunForm(prev => ({ ...prev, kategoriId: validCats[0].id }))
     }
@@ -102,7 +102,7 @@ export default function MenuYonetimPage() {
   const handleAddInit = () => {
     setModalMode('add')
     setSelectedUrun(null)
-    const validCats = kategoriler.filter(c => c.id !== 1)
+    const validCats = kategoriler.filter(c => c.id !== 0)
     setUrunForm({
       adi: '',
       fiyat: '',
@@ -234,14 +234,14 @@ export default function MenuYonetimPage() {
 
   // Filter logic
   const filtrelenmisUrunler = urunler.filter((u) => {
-    const matchKategori = aktifKategoriId === 1 || u.kategoriId === aktifKategoriId
+    const matchKategori = aktifKategoriId === 0 || u.kategoriId === aktifKategoriId
     const matchSearch = u.adi.toLowerCase().includes(searchQuery.toLowerCase())
     return matchKategori && matchSearch
   })
 
   // Calculate statistics
   const toplamUrun = urunler.length
-  const toplamKategori = kategoriler.filter(c => c.id !== 1).length
+  const toplamKategori = kategoriler.filter(c => c.id !== 0).length
   const ortalamaFiyat =
     toplamUrun > 0
       ? (urunler.reduce((sum, u) => sum + u.fiyat, 0) / toplamUrun).toFixed(2)
@@ -271,9 +271,9 @@ export default function MenuYonetimPage() {
               Kategori Ekle
             </button>
             <button
+              type="button"
               onClick={handleAddInit}
               className="btn btn-primary text-xs md:text-sm"
-              disabled={kategoriler.filter(c => c.id !== 1).length === 0}
             >
               <Plus size={16} />
               Yeni Ürün Ekle
@@ -430,7 +430,12 @@ export default function MenuYonetimPage() {
 
       {/* ─── MODAL: Add / Edit Product ────────────────────────────── */}
       {isUrunModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setIsUrunModalOpen(false)
+          }}
+        >
           <div className="glass-strong rounded-2xl w-full max-w-md overflow-hidden animate-scale-in">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
@@ -492,7 +497,7 @@ export default function MenuYonetimPage() {
                     disabled={isSubmitPending}
                   >
                     {kategoriler
-                      .filter((c) => c.id !== 1)
+                      .filter((c) => c.id !== 0)
                       .map((cat) => (
                         <option key={cat.id} value={cat.id} className="bg-slate-900 text-white">
                           {cat.adi}
@@ -573,7 +578,12 @@ export default function MenuYonetimPage() {
 
       {/* ─── MODAL: Add Category ────────────────────────────── */}
       {isKategoriModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setIsKategoriModalOpen(false)
+          }}
+        >
           <div className="glass-strong rounded-2xl w-full max-w-sm overflow-hidden animate-scale-in">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
               <h3 className="text-base font-black text-white flex items-center gap-2">
@@ -632,7 +642,12 @@ export default function MenuYonetimPage() {
 
       {/* ─── MODAL: Delete Product Confirmation ──────────────── */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setIsDeleteModalOpen(false)
+          }}
+        >
           <div className="glass-strong rounded-2xl w-full max-w-sm overflow-hidden animate-scale-in">
             <div className="p-5 text-center flex flex-col items-center">
               <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mb-3">

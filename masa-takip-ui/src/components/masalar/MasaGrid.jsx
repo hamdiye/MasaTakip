@@ -5,7 +5,7 @@ import useMasaStore from '../../store/useMasaStore'
  * Responsive grid of all table cards.
  * @param {Array} masalar - List of table objects
  */
-export default function MasaGrid({ masalar }) {
+export default function MasaGrid({ masalar, onDeleteMasa }) {
   const getMasaToplamTutar = useMasaStore((s) => s.getMasaToplamTutar)
 
   if (masalar.length === 0) {
@@ -28,6 +28,7 @@ export default function MasaGrid({ masalar }) {
           <MasaKarti
             masa={masa}
             toplamTutar={getMasaToplamTutar(masa.id)}
+            onDelete={onDeleteMasa}
           />
         </div>
       ))}

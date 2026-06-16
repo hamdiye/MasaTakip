@@ -15,7 +15,7 @@ const useMasaStore = create((set, get) => ({
   masalar: [],
   adisyonlar: {}, // masaId -> adisyon detayları
   urunler: [],
-  kategoriler: [{ id: 1, adi: 'Tümü' }],
+  kategoriler: [{ id: 0, adi: 'Tümü' }],
   isLoading: false,
   raporData: null,
   kullanicilar: [],
@@ -69,6 +69,40 @@ const useMasaStore = create((set, get) => ({
   },
 
   /**
+   * Adds a new table (Admin only).
+   */
+  masaEkle: async (adi) => {
+    try {
+      const res = await api.post('/api/masalar', { adi })
+      if (res.basarili) {
+        await get().loadMasalar()
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Masa eklenemedi.' }
+    } catch (err) {
+      console.error('masaEkle error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Deletes a table (Admin only).
+   */
+  masaSilAdmin: async (id) => {
+    try {
+      const res = await api.delete(`/api/masalar/${id}`)
+      if (res.basarili) {
+        await get().loadMasalar()
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Masa silinemedi.' }
+    } catch (err) {
+      console.error('masaSilAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
    * Fetches all products from the backend and updates local products/categories lists.
    */
   loadUrunler: async () => {
@@ -89,18 +123,8 @@ const useMasaStore = create((set, get) => ({
           gorselUrl: u.gorselUrl,
         }))
 
-        // Extract unique categories dynamically
-        const catsMap = new Map()
-        catsMap.set(1, { id: 1, adi: 'Tümü' })
-        mappedUrunler.forEach((u) => {
-          if (!catsMap.has(u.kategoriId)) {
-            catsMap.set(u.kategoriId, { id: u.kategoriId, adi: u.kategoriAdi })
-          }
-        })
-
         set({
           urunler: mappedUrunler,
-          kategoriler: Array.from(catsMap.values()),
         })
       }
     } catch (err) {
@@ -310,7 +334,7 @@ const useMasaStore = create((set, get) => ({
     try {
       const res = await api.get('/api/kategoriler')
       if (res.basarili && res.data) {
-        const cats = [{ id: 1, adi: 'Tümü' }, ...res.data]
+        const cats = [{ id: 0, adi: 'Tümü' }, ...res.data]
         set({ kategoriler: cats })
       }
     } catch (err) {
