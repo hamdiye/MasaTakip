@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "RYIQGWejx5U=",
+  "dgSpecHash": "kSxC1mcjveA=",
   "success": true,
   "projectFilePath": "/Users/hamdiyekaya/projects/MasaTakip/MasaTakip.API/MasaTakip.API.csproj",
   "expectedPackageFiles": [
@@ -65,7 +65,10 @@
     "/Users/hamdiyekaya/.nuget/packages/system.text.encoding.codepages/6.0.0/system.text.encoding.codepages.6.0.0.nupkg.sha512",
     "/Users/hamdiyekaya/.nuget/packages/system.text.encodings.web/8.0.0/system.text.encodings.web.8.0.0.nupkg.sha512",
     "/Users/hamdiyekaya/.nuget/packages/system.text.json/8.0.0/system.text.json.8.0.0.nupkg.sha512",
-    "/Users/hamdiyekaya/.nuget/packages/system.threading.channels/6.0.0/system.threading.channels.6.0.0.nupkg.sha512"
+    "/Users/hamdiyekaya/.nuget/packages/system.threading.channels/6.0.0/system.threading.channels.6.0.0.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.netcore.app.runtime.win-x64/8.0.12/microsoft.netcore.app.runtime.win-x64.8.0.12.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.aspnetcore.app.runtime.win-x64/8.0.12/microsoft.aspnetcore.app.runtime.win-x64.8.0.12.nupkg.sha512",
+    "/Users/hamdiyekaya/.nuget/packages/microsoft.netcore.app.host.win-x64/8.0.12/microsoft.netcore.app.host.win-x64.8.0.12.nupkg.sha512"
   ],
   "logs": []
 }

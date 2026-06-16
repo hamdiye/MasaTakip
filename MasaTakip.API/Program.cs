@@ -146,7 +146,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("LokalPolitika");
-
+app.UseDefaultFiles();
 // Statik dosyalar (yüklenen ürün görselleri) — wwwroot/ klasöründen servis edilir
 app.UseStaticFiles();
 

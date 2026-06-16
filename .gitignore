@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# .NET Core derleme çıktıları (DLL ve EXE'ler)
+bin/
+obj/
+/MasaTakipCanli/
+
+# Frontend çıktıları
+masa-takip-ui/dist/
+node_modules/
+
+# İşletim sistemi kalıntıları
+.DS_Store
+Thumbs.db
