@@ -26,6 +26,7 @@ dist-ssr
 bin/
 obj/
 /MasaTakipCanli/
+/Electron-app/
 
 # Frontend çıktıları
 masa-takip-ui/dist/
