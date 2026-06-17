@@ -79,7 +79,8 @@ export default function MenuYonetimPage() {
   const getGorselUrl = (path) => {
     if (!path) return null
     if (path.startsWith('http') || path.startsWith('data:')) return path
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:5115'
+    const base = import.meta.env.VITE_API_URL
+      ?? (import.meta.env.DEV ? '' : window.location.origin)
     return `${base}${path}`
   }
 

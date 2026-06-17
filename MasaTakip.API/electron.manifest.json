@@ -1,0 +1,30 @@
+{
+  "executable": "MasaTakip",
+  "splashscreen": {
+    "imageFile": ""
+  },
+  "name": "MasaTakip",
+  "author": "",
+  "singleInstance": true,
+  "environment": "Production",
+  "build": {
+    "appId": "com.masatakip.app",
+    "productName": "MasaTakip",
+    "copyright": "MasaTakip © 2025",
+    "buildVersion": "1.0.0",
+    "compression": "maximum",
+    "directories": {
+      "output": "bin/dist"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "extraResources": []
+  }
+}

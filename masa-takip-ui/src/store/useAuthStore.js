@@ -1,5 +1,14 @@
 import { create } from 'zustand'
 
+/**
+ * Resolves the API base URL depending on the runtime environment.
+ * - VITE_API_URL env var → used in Docker / explicit deployments
+ * - Empty string        → Vite dev proxy forwards /api/* to the backend
+ * - window.location.origin → Electron / self-hosted production build
+ */
+const BASE_URL = import.meta.env.VITE_API_URL
+  ?? (import.meta.env.DEV ? '' : window.location.origin)
+
 const useAuthStore = create((set, get) => ({
   // ─── State ──────────────────────────────────────────────────────────────────
   user: null, // { id, isim, rol, token, gecerlilikTarihi }
@@ -39,7 +48,7 @@ const useAuthStore = create((set, get) => ({
   login: async (pinCode, kullaniciId) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await fetch('http://localhost:5115/api/auth/login', {
+      const response = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pinCode, kullaniciId }),

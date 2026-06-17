@@ -4,6 +4,15 @@ import { UtensilsCrossed, Delete, RefreshCw, AlertCircle, ArrowLeft, User } from
 import useAuthStore from '../store/useAuthStore'
 
 /**
+ * Resolves the API base URL depending on the runtime environment.
+ * - VITE_API_URL env var → used in Docker / explicit deployments
+ * - Empty string        → Vite dev proxy forwards /api/* to the backend
+ * - window.location.origin → Electron / self-hosted production build
+ */
+const BASE_URL = import.meta.env.VITE_API_URL
+  ?? (import.meta.env.DEV ? '' : window.location.origin)
+
+/**
  * Premium POS-style PIN login page.
  * Step 1: Select a user from the active users list.
  * Step 2: Enter the 4-digit PIN for the selected user.
@@ -31,7 +40,7 @@ export default function LoginPage() {
       setLoadingUsers(true)
       setUsersError(null)
       try {
-        const response = await fetch('http://localhost:5115/api/auth/users')
+        const response = await fetch(`${BASE_URL}/api/auth/users`)
         const result = await response.json()
         if (response.ok && result.basarili) {
           setUsersList(result.data)

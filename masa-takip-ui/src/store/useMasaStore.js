@@ -3,6 +3,15 @@ import { api } from '../utils/api'
 import useAuthStore from './useAuthStore'
 
 /**
+ * Resolves the API base URL depending on the runtime environment.
+ * - VITE_API_URL env var → used in Docker / explicit deployments
+ * - Empty string        → Vite dev proxy forwards /api/* to the backend
+ * - window.location.origin → Electron / self-hosted production build
+ */
+const BASE_URL = import.meta.env.VITE_API_URL
+  ?? (import.meta.env.DEV ? '' : window.location.origin)
+
+/**
  * Calculates the total price of a bill's line items.
  * @param {Array} detaylar - Array of adisyon detail items
  * @returns {number} Total amount
@@ -377,7 +386,7 @@ const useMasaStore = create((set, get) => ({
 
         const state = useAuthStore.getState()
         const token = state.user?.token
-        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5115'}/api/urunler/${createdUrun.id}/gorsel`, {
+        const uploadRes = await fetch(`${BASE_URL}/api/urunler/${createdUrun.id}/gorsel`, {
           method: 'POST',
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           body: formData
@@ -413,7 +422,7 @@ const useMasaStore = create((set, get) => ({
 
         const state = useAuthStore.getState()
         const token = state.user?.token
-        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5115'}/api/urunler/${id}/gorsel`, {
+        const uploadRes = await fetch(`${BASE_URL}/api/urunler/${id}/gorsel`, {
           method: 'POST',
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           body: formData

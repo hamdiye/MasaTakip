@@ -8,4 +8,18 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      // Geliştirme modunda /api/* ve /swagger/* isteklerini backend'e yönlendir
+      '/api': {
+        target: 'http://localhost:5115',
+        changeOrigin: true,
+      },
+      '/swagger': {
+        target: 'http://localhost:5115',
+        changeOrigin: true,
+      },
+    },
+  },
 })
+
