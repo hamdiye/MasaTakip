@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { api } from '../utils/api'
 import useAuthStore from './useAuthStore'
+import { getConnection, startConnection } from '../services/signalrService'
 
 /**
  * Resolves the API base URL depending on the runtime environment.
@@ -544,6 +545,59 @@ const useMasaStore = create((set, get) => ({
       console.error('kullaniciSilAdmin error:', err)
       return { success: false, message: 'Bağlantı hatası oluştu.' }
     }
+  },
+
+  /**
+   * Initialises the SignalR connection and registers event handlers.
+   * - "MasalarGuncellendi": updates table statuses + refreshes only the bills
+   *   that are already loaded in the store (i.e. the user has that table open).
+   * - "MenuGuncellendi": re-fetches products and categories from the server.
+   * Safe to call multiple times; subsequent calls are no-ops.
+   */
+  initSignalR: async () => {
+    await startConnection()
+    const conn = getConnection()
+
+    // Avoid registering duplicate handlers on hot-reload / re-mount
+    conn.off('MasalarGuncellendi')
+    conn.off('MenuGuncellendi')
+
+    conn.on('MasalarGuncellendi', (masalarData) => {
+      if (!masalarData) return
+
+      const mapped = masalarData.map((m) => ({
+        id:          m.id,
+        adi:         m.adi,
+        durum:       m.durum,
+        toplamTutar: m.toplamTutar || 0,
+      }))
+
+      // Masa listesini (durum + tutar) güncelle
+      useMasaStore.setState({ masalar: mapped })
+
+      // Sadece şu an store'da yüklü olan (kullanıcı o masayı açmış) adisyonları yenile.
+      // Tüm dolu masaları değil — bu N+1 istek patlamasına yol açar.
+      const yuklenenMasaIds = Object.keys(useMasaStore.getState().adisyonlar).map(Number)
+
+      yuklenenMasaIds.forEach((masaId) => {
+        const masa = mapped.find((m) => m.id === masaId)
+        if (masa?.durum === 'Dolu') {
+          // Masa hâlâ dolu → güncel adisyon detayını çek
+          useMasaStore.getState().loadAktifAdisyon(masaId)
+        } else {
+          // Masa kapandı → store'dan temizle
+          useMasaStore.setState((state) => {
+            const { [masaId]: _removed, ...rest } = state.adisyonlar
+            return { adisyonlar: rest }
+          })
+        }
+      })
+    })
+
+    conn.on('MenuGuncellendi', async () => {
+      await useMasaStore.getState().loadUrunler()
+      await useMasaStore.getState().loadKategoriler()
+    })
   },
 }))
 

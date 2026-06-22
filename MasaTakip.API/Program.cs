@@ -1,4 +1,5 @@
 using System.Text;
+using MasaTakip.API.Hubs;
 using MasaTakip.Application.Interfaces;
 using MasaTakip.Infrastructure.Data;
 using MasaTakip.Infrastructure.Data.Seed;
@@ -68,14 +69,23 @@ builder.Services.AddControllers(options =>
     });
 
 // ─────────────────────────────────────────────
-// 5. CORS (Lokal ağ ve ileride frontend için)
+// 4b. SignalR (Gerçek zamanlı çok cihaz senkronizasyonu)
+// ─────────────────────────────────────────────
+builder.Services.AddSignalR();
+
+// ─────────────────────────────────────────────
+// 5. CORS
+// NOT: SignalR WebSocket, AllowAnyOrigin() ile çalışmaz.
+// SetIsOriginAllowed + AllowCredentials kullanılmalıdır.
 // ─────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LokalPolitika", policy =>
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader());
+        policy
+            .SetIsOriginAllowed(_ => true)   // Lokal ağ IP'lerine izin ver
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());             // SignalR WebSocket için zorunlu
 });
 
 // ─────────────────────────────────────────────
@@ -125,11 +135,20 @@ var app = builder.Build();
 // ─────────────────────────────────────────────
 // 7. Migrate & Seed (Uygulama başlarken çalışır)
 // ─────────────────────────────────────────────
-using (var scope = app.Services.CreateScope())
+try
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex,
+        "Veritabanı migration/seed sırasında hata oluştu. " +
+        "Connection string'i kontrol edin: {Cs}",
+        app.Configuration.GetConnectionString("DefaultConnection"));
 }
 
 // ─────────────────────────────────────────────
@@ -153,5 +172,10 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// ─────────────────────────────────────────────
+// 9. SignalR Hub endpoint
+// ─────────────────────────────────────────────
+app.MapHub<MasaHub>("/hubs/masa");
 
 app.Run();

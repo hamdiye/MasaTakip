@@ -1,14 +1,17 @@
 using System.Security.Claims;
+using MasaTakip.API.Hubs;
 using MasaTakip.Application.DTOs.Adisyon;
 using MasaTakip.Application.DTOs.Common;
 using MasaTakip.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace MasaTakip.API.Controllers;
 
 /// <summary>
 /// Provides endpoints for bill (adisyon) operations: viewing, adding items, closing, deleting products, and canceling bills.
+/// After each successful mutation, broadcasts the updated table list to all connected SignalR clients.
 /// </summary>
 [ApiController]
 [Route("api/adisyon")]
@@ -16,10 +19,17 @@ namespace MasaTakip.API.Controllers;
 public class AdisyonController : ControllerBase
 {
     private readonly IAdisyonService _adisyonService;
+    private readonly IMasaService    _masaService;
+    private readonly IHubContext<MasaHub> _hub;
 
-    public AdisyonController(IAdisyonService adisyonService)
+    public AdisyonController(
+        IAdisyonService adisyonService,
+        IMasaService    masaService,
+        IHubContext<MasaHub> hub)
     {
         _adisyonService = adisyonService;
+        _masaService    = masaService;
+        _hub            = hub;
     }
 
     /// <summary>Returns the active (open) bill for the specified table, including all ordered items.</summary>
@@ -35,6 +45,7 @@ public class AdisyonController : ControllerBase
     /// <summary>
     /// Adds a product to the active bill. Creates a new bill if the table has none.
     /// Increments quantity if the product already exists in the bill.
+    /// Broadcasts updated table list to all connected clients on success.
     /// </summary>
     [HttpPost("urun-ekle")]
     [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status200OK)]
@@ -46,10 +57,16 @@ public class AdisyonController : ControllerBase
             return Unauthorized(ApiResponse<AdisyonResponse>.Hata("Kullanıcı kimliği doğrulanamadı."));
 
         var result = await _adisyonService.UrunEkleAsync(request, kullaniciId);
+        if (result.Basarili)
+            await BroadcastMasalarAsync();
+
         return result.Basarili ? Ok(result) : BadRequest(result);
     }
 
-    /// <summary>Closes the active bill, records payment type, and marks the table as available. Admin only.</summary>
+    /// <summary>
+    /// Closes the active bill, records payment type, and marks the table as available. Admin only.
+    /// Broadcasts updated table list to all connected clients on success.
+    /// </summary>
     [HttpPost("kapat")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status200OK)]
@@ -62,10 +79,16 @@ public class AdisyonController : ControllerBase
             return Unauthorized(ApiResponse<AdisyonResponse>.Hata("Kullanıcı kimliği doğrulanamadı."));
 
         var result = await _adisyonService.AdisyonKapatAsync(request, kullaniciId);
+        if (result.Basarili)
+            await BroadcastMasalarAsync();
+
         return result.Basarili ? Ok(result) : BadRequest(result);
     }
 
-    /// <summary>Reduces product quantity or completely removes it from the active bill. Waiter or Admin only.</summary>
+    /// <summary>
+    /// Reduces product quantity or completely removes it from the active bill. Waiter or Admin only.
+    /// Broadcasts updated table list to all connected clients on success.
+    /// </summary>
     [HttpPost("urun-sil")]
     [Authorize(Roles = "Garson,Admin")]
     [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status200OK)]
@@ -78,10 +101,16 @@ public class AdisyonController : ControllerBase
             return Unauthorized(ApiResponse<AdisyonResponse>.Hata("Kullanıcı kimliği doğrulanamadı."));
 
         var result = await _adisyonService.UrunSilAsync(request, kullaniciId);
+        if (result.Basarili)
+            await BroadcastMasalarAsync();
+
         return result.Basarili ? Ok(result) : BadRequest(result);
     }
 
-    /// <summary>Cancels an active bill completely, freeing the table. Admin only.</summary>
+    /// <summary>
+    /// Cancels an active bill completely, freeing the table. Admin only.
+    /// Broadcasts updated table list to all connected clients on success.
+    /// </summary>
     [HttpPost("iptal")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status200OK)]
@@ -94,6 +123,9 @@ public class AdisyonController : ControllerBase
             return Unauthorized(ApiResponse<AdisyonResponse>.Hata("Kullanıcı kimliği doğrulanamadı."));
 
         var result = await _adisyonService.AdisyonIptalAsync(request, kullaniciId);
+        if (result.Basarili)
+            await BroadcastMasalarAsync();
+
         return result.Basarili ? Ok(result) : BadRequest(result);
     }
 
@@ -102,5 +134,15 @@ public class AdisyonController : ControllerBase
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(claim, out var id) ? id : 0;
+    }
+
+    /// <summary>
+    /// Fetches the latest table list from the database and broadcasts it
+    /// to all connected SignalR clients via the "MasalarGuncellendi" event.
+    /// </summary>
+    private async Task BroadcastMasalarAsync()
+    {
+        var masalar = await _masaService.GetTumMasalarAsync();
+        await _hub.Clients.All.SendAsync("MasalarGuncellendi", masalar.Data);
     }
 }

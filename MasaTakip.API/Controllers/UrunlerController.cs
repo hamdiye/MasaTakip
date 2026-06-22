@@ -1,24 +1,29 @@
+using MasaTakip.API.Hubs;
 using MasaTakip.Application.DTOs.Common;
 using MasaTakip.Application.DTOs.Urun;
 using MasaTakip.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace MasaTakip.API.Controllers;
 
 /// <summary>
 /// Provides endpoints for product management including image upload.
+/// Broadcasts "MenuGuncellendi" event to all connected SignalR clients after any structural change.
 /// </summary>
 [ApiController]
 [Route("api/urunler")]
 [Authorize]
 public class UrunlerController : ControllerBase
 {
-    private readonly IUrunService _urunService;
+    private readonly IUrunService        _urunService;
+    private readonly IHubContext<MasaHub> _hub;
 
-    public UrunlerController(IUrunService urunService)
+    public UrunlerController(IUrunService urunService, IHubContext<MasaHub> hub)
     {
         _urunService = urunService;
+        _hub         = hub;
     }
 
     /// <summary>Returns all products with category information.</summary>
@@ -40,7 +45,10 @@ public class UrunlerController : ControllerBase
         return result.Basarili ? Ok(result) : NotFound(result);
     }
 
-    /// <summary>Creates a new product (Admin only). Image can be uploaded separately.</summary>
+    /// <summary>
+    /// Creates a new product (Admin only). Image can be uploaded separately.
+    /// Broadcasts "MenuGuncellendi" to all connected clients on success.
+    /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<UrunResponse>), StatusCodes.Status201Created)]
@@ -51,6 +59,7 @@ public class UrunlerController : ControllerBase
         if (!result.Basarili)
             return BadRequest(result);
 
+        await _hub.Clients.All.SendAsync("MenuGuncellendi", new { tip = "urun-eklendi" });
         return CreatedAtAction(nameof(GetUrun), new { id = result.Data!.Id }, result);
     }
 
@@ -58,6 +67,7 @@ public class UrunlerController : ControllerBase
     /// Uploads or replaces a product image (Admin only).
     /// Accepts multipart/form-data with a field named 'dosya'.
     /// Allowed types: jpg, jpeg, png, webp. Max size: 5 MB.
+    /// Broadcasts "MenuGuncellendi" to all connected clients on success.
     /// </summary>
     [HttpPost("{id:int}/gorsel")]
     [Authorize(Roles = "Admin")]
@@ -83,10 +93,14 @@ public class UrunlerController : ControllerBase
                 : BadRequest(result);
         }
 
+        await _hub.Clients.All.SendAsync("MenuGuncellendi", new { tip = "gorsel-guncellendi" });
         return Ok(result);
     }
 
-    /// <summary>Updates an existing product (Admin only).</summary>
+    /// <summary>
+    /// Updates an existing product (Admin only).
+    /// Broadcasts "MenuGuncellendi" to all connected clients on success.
+    /// </summary>
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<UrunResponse>), StatusCodes.Status200OK)]
@@ -102,10 +116,14 @@ public class UrunlerController : ControllerBase
                 : BadRequest(result);
         }
 
+        await _hub.Clients.All.SendAsync("MenuGuncellendi", new { tip = "urun-guncellendi" });
         return Ok(result);
     }
 
-    /// <summary>Deletes a product (Admin only).</summary>
+    /// <summary>
+    /// Deletes a product (Admin only).
+    /// Broadcasts "MenuGuncellendi" to all connected clients on success.
+    /// </summary>
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
@@ -116,6 +134,7 @@ public class UrunlerController : ControllerBase
         if (!result.Basarili)
             return NotFound(result);
 
+        await _hub.Clients.All.SendAsync("MenuGuncellendi", new { tip = "urun-silindi" });
         return Ok(result);
     }
 }

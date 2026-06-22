@@ -1,24 +1,29 @@
+using MasaTakip.API.Hubs;
 using MasaTakip.Application.DTOs.Common;
 using MasaTakip.Application.DTOs.Masa;
 using MasaTakip.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace MasaTakip.API.Controllers;
 
 /// <summary>
 /// Provides endpoints for table (masa) management.
+/// Broadcasts real-time updates to all connected SignalR clients on every structural change.
 /// </summary>
 [ApiController]
 [Route("api/masalar")]
 [Authorize]
 public class MasalarController : ControllerBase
 {
-    private readonly IMasaService _masaService;
+    private readonly IMasaService        _masaService;
+    private readonly IHubContext<MasaHub> _hub;
 
-    public MasalarController(IMasaService masaService)
+    public MasalarController(IMasaService masaService, IHubContext<MasaHub> hub)
     {
         _masaService = masaService;
+        _hub         = hub;
     }
 
     /// <summary>Returns all tables with their current occupancy status (Bos/Dolu).</summary>
@@ -30,7 +35,10 @@ public class MasalarController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Creates a new table in the system (Admin only).</summary>
+    /// <summary>
+    /// Creates a new table in the system (Admin only).
+    /// Broadcasts the updated table list to all connected clients on success.
+    /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<MasaResponse>), StatusCodes.Status201Created)]
@@ -41,10 +49,14 @@ public class MasalarController : ControllerBase
         if (!result.Basarili)
             return BadRequest(result);
 
+        await BroadcastMasalarAsync();
         return CreatedAtAction(nameof(GetTumMasalar), result);
     }
 
-    /// <summary>Deletes a table by ID (Admin only).</summary>
+    /// <summary>
+    /// Deletes a table by ID (Admin only).
+    /// Broadcasts the updated table list to all connected clients on success.
+    /// </summary>
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
@@ -60,6 +72,17 @@ public class MasalarController : ControllerBase
                 : BadRequest(result);
         }
 
+        await BroadcastMasalarAsync();
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Fetches the latest table list from the database and broadcasts it
+    /// to all connected SignalR clients via the "MasalarGuncellendi" event.
+    /// </summary>
+    private async Task BroadcastMasalarAsync()
+    {
+        var masalar = await _masaService.GetTumMasalarAsync();
+        await _hub.Clients.All.SendAsync("MasalarGuncellendi", masalar.Data);
     }
 }
