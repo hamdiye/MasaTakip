@@ -25,6 +25,8 @@ dist-ssr
 # .NET Core derleme çıktıları (DLL ve EXE'ler)
 bin/
 obj/
+*.dll
+*.exe
 /MasaTakipCanli/
 /Electron-app/
 
