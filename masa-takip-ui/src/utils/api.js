@@ -38,8 +38,22 @@ async function apiRequest(endpoint, options = {}) {
     throw new Error('Oturum süresi doldu. Lütfen tekrar giriş yapın.')
   }
 
-  const result = await response.json()
-  return result
+  // Handle 403 Forbidden — return a structured error instead of crashing on empty body
+  if (response.status === 403) {
+    return { basarili: false, mesaj: 'Bu işlem için yetkiniz bulunmamaktadır.' }
+  }
+
+  // Safely parse JSON — some error responses may have an empty body
+  const text = await response.text()
+  if (!text) {
+    return { basarili: false, mesaj: 'Sunucudan boş yanıt geldi.' }
+  }
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { basarili: false, mesaj: 'Sunucu yanıtı okunamadı.' }
+  }
 }
 
 export const api = {

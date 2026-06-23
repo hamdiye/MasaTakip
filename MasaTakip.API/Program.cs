@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using MasaTakip.API.Hubs;
 using MasaTakip.Application.Interfaces;
@@ -32,6 +33,10 @@ builder.Services.AddScoped<IRaporService,   RaporService>();
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey   = jwtSettings["SecretKey"]!;
 
+// Prevent JwtSecurityTokenHandler from remapping claim type names.
+// Token is written with "role" as claim type; RoleClaimType must match exactly.
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -47,7 +52,31 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer              = jwtSettings["Issuer"],
         ValidAudience            = jwtSettings["Audience"],
-        IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+        IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        // Role claim type matches what AuthService writes ("role" literal)
+        RoleClaimType            = "role"
+    };
+
+    // Normalize old tokens: if they carry the long-URI role claim
+    // (ClaimTypes.Role), add a short "role" claim so [Authorize(Roles=...)] works
+    // even before the user re-logs in.
+    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+    {
+        OnTokenValidated = ctx =>
+        {
+            var identity = ctx.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
+            if (identity is null) return Task.CompletedTask;
+
+            const string longRoleUri = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+            var oldRoleClaims = identity.FindAll(longRoleUri).ToList();
+            foreach (var old in oldRoleClaims)
+            {
+                // Add short "role" claim if not already present with same value
+                if (!identity.HasClaim("role", old.Value))
+                    identity.AddClaim(new System.Security.Claims.Claim("role", old.Value));
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -139,8 +168,38 @@ try
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db);
+
+    // ── Veri bütünlüğü kontrolü ─────────────────────────────────────
+    // Ürün kalmamış ama "Acik" durumda kalan adisyonları iptal et ve masayı boşalt.
+    // Bu durum, otomatik iptal özelliği eklenmeden önce oluşan kayıtları temizler.
+    var bosAdisyonlar = await db.Adisyonlar
+        .Include(a => a.Detaylar)
+        .Include(a => a.Masa)
+        .Where(a => a.Durum == MasaTakip.Domain.Enums.AdisyonDurum.Acik && !a.Detaylar.Any())
+        .ToListAsync();
+
+    if (bosAdisyonlar.Count > 0)
+    {
+        startupLogger.LogWarning(
+            "{Count} adet boş (ürünsüz) açık adisyon bulundu. Otomatik iptal ediliyor...",
+            bosAdisyonlar.Count);
+
+        foreach (var adisyon in bosAdisyonlar)
+        {
+            adisyon.Durum         = MasaTakip.Domain.Enums.AdisyonDurum.Iptal;
+            adisyon.KapanisTarihi = DateTime.UtcNow;
+            adisyon.ToplamTutar   = 0;
+            if (adisyon.Masa is not null)
+                adisyon.Masa.Durum = MasaTakip.Domain.Enums.MasaDurum.Bos;
+        }
+
+        await db.SaveChangesAsync();
+        startupLogger.LogInformation("{Count} boş adisyon iptal edildi, masalar boşaltıldı.", bosAdisyonlar.Count);
+    }
 }
 catch (Exception ex)
 {

@@ -9,9 +9,30 @@ import { create } from 'zustand'
 const BASE_URL = import.meta.env.VITE_API_URL
   ?? (import.meta.env.DEV ? '' : window.location.origin)
 
+/**
+ * Safely retrieves and parses the stored authentication user data.
+ * Checks if the JWT token expiration date is still valid.
+ * @returns {Object|null} User data object if valid, otherwise null.
+ */
+const getInitialUser = () => {
+  try {
+    const stored = localStorage.getItem('masatakip_auth')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      // Check if token is expired
+      if (new Date(parsed.gecerlilikTarihi) > new Date()) {
+        return parsed
+      }
+    }
+  } catch (err) {
+    console.error('Auth initialization error:', err)
+  }
+  return null
+}
+
 const useAuthStore = create((set, get) => ({
   // ─── State ──────────────────────────────────────────────────────────────────
-  user: null, // { id, isim, rol, token, gecerlilikTarihi }
+  user: getInitialUser(), // { id, isim, rol, token, gecerlilikTarihi }
   isLoading: false,
   error: null,
 

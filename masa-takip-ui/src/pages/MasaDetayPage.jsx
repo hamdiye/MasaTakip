@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Receipt, BookOpen } from 'lucide-react'
 import AdisyonListesi from '../components/masa-detay/AdisyonListesi'
@@ -23,13 +23,28 @@ export default function MasaDetayPage() {
   const [aktifSekme, setAktifSekme] = useState('adisyon')
 
   const masalar = useMasaStore((s) => s.masalar)
+  const isLoading = useMasaStore((s) => s.isLoading)
   const loadMasalar = useMasaStore((s) => s.loadMasalar)
   const loadUrunler = useMasaStore((s) => s.loadUrunler)
   const loadKategoriler = useMasaStore((s) => s.loadKategoriler)
   const loadAktifAdisyon = useMasaStore((s) => s.loadAktifAdisyon)
 
-  const masa    = masalar.find((m) => m.id === masaId)
+  // Reactive selector: tracks this table's durum directly in the store
+  const masaDurum = useMasaStore((s) => s.masalar.find((m) => m.id === masaId)?.durum)
 
+  // Auto-navigate back to MasalarPage when the table transitions from Dolu to Bos
+  // (triggered by auto-cancellation when the last item is removed)
+  const prevDurumRef = useRef(null)
+  useEffect(() => {
+    if (prevDurumRef.current === 'Dolu' && masaDurum === 'Bos') {
+      navigate('/')
+    }
+    if (masaDurum !== undefined) {
+      prevDurumRef.current = masaDurum
+    }
+  }, [masaDurum, navigate])
+
+  // Load all data needed for this table on mount / table change
   useEffect(() => {
     if (masalar.length === 0) {
       loadMasalar()
@@ -37,8 +52,23 @@ export default function MasaDetayPage() {
     loadUrunler()
     loadKategoriler()
     loadAktifAdisyon(masaId)
-  }, [masaId, loadMasalar, loadUrunler, loadKategoriler, loadAktifAdisyon, masalar.length])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [masaId])
 
+  // Find the specific table
+  const masa = masalar.find((m) => m.id === masaId)
+
+  // Show spinner while tables are loading for the first time
+  if (!masa && isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center flex-1 gap-3 text-slate-500">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <p className="text-sm font-semibold">Masa bilgileri yükleniyor...</p>
+      </div>
+    )
+  }
+
+  // Table truly not found after loading completes
   if (!masa) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 gap-4 text-slate-500">

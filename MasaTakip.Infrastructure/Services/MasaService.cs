@@ -20,7 +20,9 @@ public class MasaService : IMasaService
         _context = context;
     }
 
-    /// <summary>Returns all tables ordered by name, including their current occupancy status and active bill total.</summary>
+    /// <summary>
+    /// Returns all tables ordered by name, including their current occupancy status (derived from Masa.Durum) and active bill total.
+    /// </summary>
     public async Task<ApiResponse<List<MasaResponse>>> GetTumMasalarAsync()
     {
         var masalar = await _context.Masalar
@@ -29,7 +31,7 @@ public class MasaService : IMasaService
             {
                 Id          = m.Id,
                 Adi         = m.Adi,
-                Durum       = m.Durum.ToString(),
+                Durum       = m.Durum == MasaDurum.Dolu ? "Dolu" : "Bos",
                 ToplamTutar = m.Adisyonlar
                     .Where(a => a.Durum == AdisyonDurum.Acik)
                     .Select(a => a.ToplamTutar)

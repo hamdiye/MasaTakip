@@ -50,7 +50,8 @@ public class KullanicilarController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<KullaniciResponse>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> KullaniciGuncelle(int id, [FromBody] KullaniciGuncelleRequest request)
     {
-        var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var currentUserIdClaim = User.FindFirst("sub")?.Value
+                              ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(currentUserIdClaim, out int currentUserId))
         {
             return Unauthorized();
@@ -75,7 +76,8 @@ public class KullanicilarController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> KullaniciSil(int id)
     {
-        var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var currentUserIdClaim = User.FindFirst("sub")?.Value
+                              ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(currentUserIdClaim, out int currentUserId))
         {
             return Unauthorized();

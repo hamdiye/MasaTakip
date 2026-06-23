@@ -138,7 +138,9 @@ public class AdisyonService : IAdisyonService
         return ApiResponse<AdisyonResponse>.Basari(MapToResponse(adisyon), "Adisyon kapatıldı, masa boşaltıldı.");
     }
 
-    /// <summary>Reduces quantity or completely removes a product from the active bill. Logs the action.</summary>
+    /// <summary>Reduces quantity or completely removes a product from the active bill.
+    /// If the bill becomes empty after removal, automatically cancels it and frees the table.
+    /// Logs the action.</summary>
     public async Task<ApiResponse<AdisyonResponse>> UrunSilAsync(UrunSilRequest request, int kullaniciId)
     {
         var adisyon = await _context.Adisyonlar
@@ -168,8 +170,24 @@ public class AdisyonService : IAdisyonService
                 kullaniciId, request.UrunId, eskiAdet, request.MasaId);
         }
 
-        // Recalculate total
-        adisyon.ToplamTutar = adisyon.Detaylar.Sum(d => d.Adet * d.AnlikFiyat);
+        // Auto-cancel the bill and free the table when the last item is removed
+
+        if (adisyon.Detaylar.Count == 0)
+        {
+            adisyon.Durum              = AdisyonDurum.Iptal;
+            adisyon.KapanisTarihi      = DateTime.UtcNow;
+            adisyon.KapatanKullaniciId = kullaniciId;
+            adisyon.ToplamTutar        = 0;
+            adisyon.Masa.Durum         = MasaDurum.Bos;
+
+            _logger.LogInformation("Kullanıcı {KullaniciId}, son ürünü kaldırdı. Adisyon otomatik iptal edildi, masa boşaltıldı. Masa: {MasaId}",
+                kullaniciId, request.MasaId);
+        }
+        else
+        {
+            // Recalculate total
+            adisyon.ToplamTutar = adisyon.Detaylar.Sum(d => d.Adet * d.AnlikFiyat);
+        }
 
         await _context.SaveChangesAsync();
 
@@ -181,7 +199,11 @@ public class AdisyonService : IAdisyonService
         return ApiResponse<AdisyonResponse>.Basari(MapToResponse(adisyon), "Ürün adisyondan silindi/azaltıldı.");
     }
 
-    /// <summary>Cancels an active bill completely, marks the table as free, and sets bill state to Canceled.</summary>
+    /// <summary>
+    /// Cancels an active bill completely. Both Garson and Admin can cancel regardless of items.
+    /// The UI enforces a confirmation dialog before this endpoint is called.
+    /// Marks the table as free and sets the bill state to Canceled.
+    /// </summary>
     public async Task<ApiResponse<AdisyonResponse>> AdisyonIptalAsync(AdisyonIptalRequest request, int kullaniciId)
     {
         var adisyon = await _context.Adisyonlar
@@ -192,6 +214,10 @@ public class AdisyonService : IAdisyonService
 
         if (adisyon is null)
             return ApiResponse<AdisyonResponse>.Hata("Bu masaya ait açık adisyon bulunamadı.");
+
+        var kullanici = await _context.Kullanicilar.FindAsync(kullaniciId);
+        if (kullanici is null)
+            return ApiResponse<AdisyonResponse>.Hata("Kullanıcı bulunamadı.");
 
         adisyon.Durum              = AdisyonDurum.Iptal;
         adisyon.KapanisTarihi      = DateTime.UtcNow;

@@ -107,7 +107,10 @@ public class AuthService : IAuthService
         return ApiResponse<List<KullaniciResponse>>.Basari(kullanicilar);
     }
 
-    /// <summary>Generates a signed JWT token for the given user.</summary>
+    /// <summary>Generates a signed JWT token for the given user.
+    /// Uses short claim type names ("sub", "name", "role") to avoid ASP.NET Core
+    /// claim-mapping issues that can cause [Authorize(Roles=...)] to return 403.
+    /// </summary>
     private (string token, DateTime expiry) GenerateJwtToken(Kullanici kullanici)
     {
         var jwtSettings   = _configuration.GetSection("JwtSettings");
@@ -120,11 +123,14 @@ public class AuthService : IAuthService
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiry = DateTime.UtcNow.AddMinutes(expireMinutes);
 
+        // Write short claim names so no claim-type remapping occurs.
+        // "sub" = user ID, "name" = display name, "role" = role.
+        // RoleClaimType = "role" in Program.cs must match.
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, kullanici.Id.ToString()),
-            new Claim(ClaimTypes.Name,           kullanici.Isim),
-            new Claim(ClaimTypes.Role,           kullanici.Rol.ToString()),
+            new Claim("sub",  kullanici.Id.ToString()),
+            new Claim("name", kullanici.Isim),
+            new Claim("role", kullanici.Rol.ToString()),
         };
 
         var token = new JwtSecurityToken(

@@ -108,11 +108,12 @@ public class AdisyonController : ControllerBase
     }
 
     /// <summary>
-    /// Cancels an active bill completely, freeing the table. Admin only.
+    /// Cancels an active bill completely, freeing the table. Admin or Garson.
+    /// Garson may only cancel via the UI when the bill is empty (0 items).
     /// Broadcasts updated table list to all connected clients on success.
     /// </summary>
     [HttpPost("iptal")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Garson,Admin")]
     [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -129,10 +130,14 @@ public class AdisyonController : ControllerBase
         return result.Basarili ? Ok(result) : BadRequest(result);
     }
 
-    /// <summary>Helper method to extract the logged-in user's ID from JWT claims.</summary>
+    /// <summary>Helper method to extract the logged-in user's ID from JWT claims.
+    /// Uses "sub" because DefaultInboundClaimTypeMap is cleared in Program.cs.</summary>
     private int GetCurrentUserId()
     {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        // Token is written with "sub" (not ClaimTypes.NameIdentifier) since
+        // DefaultInboundClaimTypeMap is cleared — read it by the same literal key.
+        var claim = User.FindFirst("sub")?.Value
+                 ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(claim, out var id) ? id : 0;
     }
 

@@ -127,9 +127,9 @@ const useMasaStore = create((set, get) => ({
           fiyat: u.fiyat,
           emoji:
             u.kategoriAdi === 'Başlangıçlar' ? '🥗' :
-            u.kategoriAdi === 'Ana Yemekler' ? '🥩' :
-            u.kategoriAdi === 'İçecekler' ? '🥤' :
-            u.kategoriAdi === 'Tatlılar' ? '🍮' : '🍽️',
+              u.kategoriAdi === 'Ana Yemekler' ? '🥩' :
+                u.kategoriAdi === 'İçecekler' ? '🥤' :
+                  u.kategoriAdi === 'Tatlılar' ? '🍮' : '🍽️',
           gorselUrl: u.gorselUrl,
         }))
 
@@ -215,6 +215,7 @@ const useMasaStore = create((set, get) => ({
 
   /**
    * Decreases the quantity of a product. Removes it if quantity reaches 0.
+   * If the bill becomes empty, the backend auto-cancels it and the store entry is removed.
    * @param {number} masaId
    * @param {number} urunId
    */
@@ -233,13 +234,25 @@ const useMasaStore = create((set, get) => ({
           adet: d.adet,
           anlikFiyat: d.anlikFiyat,
         }))
-        const yeniDurum = detaylar.length === 0 ? 'Bos' : 'Dolu'
-        set((state) => ({
-          adisyonlar: { ...state.adisyonlar, [masaId]: detaylar },
-          masalar: state.masalar.map((m) =>
-            m.id === masaId ? { ...m, durum: yeniDurum } : m
-          ),
-        }))
+        if (detaylar.length === 0) {
+          // Backend auto-cancelled the bill → remove from store and free table
+          set((state) => {
+            const { [masaId]: _removed, ...kalanAdisyonlar } = state.adisyonlar
+            return {
+              adisyonlar: kalanAdisyonlar,
+              masalar: state.masalar.map((m) =>
+                m.id === masaId ? { ...m, durum: 'Bos', toplamTutar: 0 } : m
+              ),
+            }
+          })
+        } else {
+          set((state) => ({
+            adisyonlar: { ...state.adisyonlar, [masaId]: detaylar },
+            masalar: state.masalar.map((m) =>
+              m.id === masaId ? { ...m, durum: 'Dolu' } : m
+            ),
+          }))
+        }
       }
     } catch (err) {
       console.error('adetAzalt error:', err)
@@ -263,7 +276,7 @@ const useMasaStore = create((set, get) => ({
           return {
             adisyonlar: kalanAdisyonlar,
             masalar: state.masalar.map((m) =>
-              m.id === masaId ? { ...m, durum: 'Bos' } : m
+              m.id === masaId ? { ...m, durum: 'Bos', toplamTutar: 0 } : m
             ),
           }
         })
@@ -291,7 +304,7 @@ const useMasaStore = create((set, get) => ({
           return {
             adisyonlar: kalanAdisyonlar,
             masalar: state.masalar.map((m) =>
-              m.id === masaId ? { ...m, durum: 'Bos' } : m
+              m.id === masaId ? { ...m, durum: 'Bos', toplamTutar: 0 } : m
             ),
           }
         })
@@ -306,6 +319,7 @@ const useMasaStore = create((set, get) => ({
 
   /**
    * Removes a product line entirely from a table's bill.
+   * If the bill becomes empty, the backend auto-cancels it and the store entry is removed.
    * @param {number} masaId
    * @param {number} urunId
    */
@@ -324,13 +338,25 @@ const useMasaStore = create((set, get) => ({
           adet: d.adet,
           anlikFiyat: d.anlikFiyat,
         }))
-        const yeniDurum = detaylar.length === 0 ? 'Bos' : 'Dolu'
-        set((state) => ({
-          adisyonlar: { ...state.adisyonlar, [masaId]: detaylar },
-          masalar: state.masalar.map((m) =>
-            m.id === masaId ? { ...m, durum: yeniDurum } : m
-          ),
-        }))
+        if (detaylar.length === 0) {
+          // Backend auto-cancelled the bill → remove from store and free table
+          set((state) => {
+            const { [masaId]: _removed, ...kalanAdisyonlar } = state.adisyonlar
+            return {
+              adisyonlar: kalanAdisyonlar,
+              masalar: state.masalar.map((m) =>
+                m.id === masaId ? { ...m, durum: 'Bos', toplamTutar: 0 } : m
+              ),
+            }
+          })
+        } else {
+          set((state) => ({
+            adisyonlar: { ...state.adisyonlar, [masaId]: detaylar },
+            masalar: state.masalar.map((m) =>
+              m.id === masaId ? { ...m, durum: 'Dolu' } : m
+            ),
+          }))
+        }
       }
     } catch (err) {
       console.error('urunKaldir error:', err)
@@ -566,9 +592,9 @@ const useMasaStore = create((set, get) => ({
       if (!masalarData) return
 
       const mapped = masalarData.map((m) => ({
-        id:          m.id,
-        adi:         m.adi,
-        durum:       m.durum,
+        id: m.id,
+        adi: m.adi,
+        durum: m.durum,
         toplamTutar: m.toplamTutar || 0,
       }))
 

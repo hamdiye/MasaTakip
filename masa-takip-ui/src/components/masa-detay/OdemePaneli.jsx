@@ -88,7 +88,7 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
           {user?.rol !== 'Admin' ? 'Ödeme Yetkisi Yok (Sadece Kasa)' : 'Hesabı Kapat – Ödeme Al'}
         </button>
 
-        {/* Cancel button (Admin only) */}
+        {/* Cancel button: visible only to Admin */}
         {user?.rol === 'Admin' && (
           <button
             id="btn-adisyon-iptal"
@@ -97,11 +97,12 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
                 const success = await adisyonIptal(masaId)
                 if (success) {
                   navigate('/')
+                } else {
+                  alert('Adisyon iptal edilemedi. Sunucu bağlantısını kontrol edin.')
                 }
               }
             }}
-            disabled={toplamTutar === 0}
-            className="btn bg-red-600 hover:bg-red-700 active:bg-red-800 text-white w-full text-xs py-2 mt-2 border-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 rounded-xl font-bold transition-colors"
+            className="btn bg-red-600 hover:bg-red-700 active:bg-red-800 text-white w-full text-xs py-2 mt-2 border-0 cursor-pointer flex items-center justify-center gap-1.5 rounded-xl font-bold transition-colors"
           >
             Adisyonu İptal Et
           </button>
