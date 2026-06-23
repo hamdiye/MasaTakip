@@ -26,10 +26,17 @@ async function apiRequest(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  })
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    // Network hatası: Sunucu kapalı, internet yok vs.
+    alert('Sunucuyla bağlantı kesildi! Lütfen Ana Bilgisayarın (Kasa) açık olduğundan emin olun.');
+    return { basarili: false, mesaj: 'Sunucuya bağlanılamadı.' };
+  }
 
   // Handle auto logout on 401 Unauthorized
   if (response.status === 401) {

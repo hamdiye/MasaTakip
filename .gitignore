@@ -37,3 +37,6 @@ node_modules/
 # İşletim sistemi kalıntıları
 .DS_Store
 Thumbs.db
+
+# Dokümantasyon çıktıları
+MasaTakip_Kullanim_Klavuzu.pdf

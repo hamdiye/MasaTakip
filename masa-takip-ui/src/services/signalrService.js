@@ -22,11 +22,16 @@ let _connection = null
  */
 export function getConnection() {
   if (!_connection) {
-    _connection = new signalR.HubConnectionBuilder()
-      .withUrl(HUB_URL)
-      .withAutomaticReconnect([0, 1000, 3000, 5000, 10000])
-      .configureLogging(signalR.LogLevel.Warning)
-      .build()
+      _connection = new signalR.HubConnectionBuilder()
+        .withUrl(HUB_URL)
+        .withAutomaticReconnect([0, 1000, 3000, 5000, 10000])
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+      _connection.onclose((error) => {
+        console.error('[SignalR] Bağlantı tamamen koptu.', error);
+        alert('Canlı veri akışı kesildi! Lütfen Ana Bilgisayarın çalıştığından ve ağ bağlantınızdan emin olun.');
+      });
   }
   return _connection
 }
