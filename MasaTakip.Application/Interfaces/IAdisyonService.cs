@@ -25,4 +25,19 @@ public interface IAdisyonService
 
     /// <summary>Cancels an active bill completely, marks the table as free, and sets bill state to Canceled.</summary>
     Task<ApiResponse<AdisyonResponse>> AdisyonIptalAsync(AdisyonIptalRequest request, int kullaniciId);
+
+    /// <summary>
+    /// Transfers the source table's active bill to an empty target table.
+    /// The source table becomes free and the target table becomes occupied.
+    /// Returns an error if the target table already has an open bill.
+    /// </summary>
+    Task<ApiResponse<AdisyonResponse>> AdisyonTasiAsync(AdisyonTasiRequest request, int kullaniciId);
+
+    /// <summary>
+    /// Merges the source table's active bill into the target table's existing open bill.
+    /// Items with the same product are combined into a single line (quantities summed).
+    /// The source bill is cancelled and its table becomes free.
+    /// Returns an error if the target table has no open bill.
+    /// </summary>
+    Task<ApiResponse<AdisyonResponse>> AdisyonBirlestirAsync(AdisyonTasiRequest request, int kullaniciId);
 }

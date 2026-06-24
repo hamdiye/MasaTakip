@@ -21,7 +21,7 @@ function ProtectedLayout() {
 
   return (
     <div
-      className="flex flex-col min-h-dvh"
+      className="flex flex-col h-full overflow-hidden"
       style={{ background: 'var(--color-bg)' }}
     >
       {/* Top navbar (desktop) */}

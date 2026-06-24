@@ -19,6 +19,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 html {
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -27,12 +32,12 @@ html {
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  min-height: 100dvh;
   margin: 0;
+  overscroll-behavior-y: none;
 }
 
 #root {
-  min-height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }

@@ -130,6 +130,52 @@ public class AdisyonController : ControllerBase
         return result.Basarili ? Ok(result) : BadRequest(result);
     }
 
+    /// <summary>
+    /// Transfers the source table's active bill to an empty target table.
+    /// The source table becomes free and the target table becomes occupied.
+    /// Broadcasts updated table list to all connected clients on success.
+    /// </summary>
+    [HttpPost("tasi")]
+    [Authorize(Roles = "Garson,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AdisyonTasi([FromBody] AdisyonTasiRequest request)
+    {
+        var kullaniciId = GetCurrentUserId();
+        if (kullaniciId == 0)
+            return Unauthorized(ApiResponse<AdisyonResponse>.Hata("Kullanıcı kimliği doğrulanamadı."));
+
+        var result = await _adisyonService.AdisyonTasiAsync(request, kullaniciId);
+        if (result.Basarili)
+            await BroadcastMasalarAsync();
+
+        return result.Basarili ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>
+    /// Merges the source table's active bill into the target table's existing open bill.
+    /// Same products have their quantities summed. Source bill is cancelled, source table freed.
+    /// Broadcasts updated table list to all connected clients on success.
+    /// </summary>
+    [HttpPost("birlestir")]
+    [Authorize(Roles = "Garson,Admin")]
+    [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AdisyonResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AdisyonBirlestir([FromBody] AdisyonTasiRequest request)
+    {
+        var kullaniciId = GetCurrentUserId();
+        if (kullaniciId == 0)
+            return Unauthorized(ApiResponse<AdisyonResponse>.Hata("Kullanıcı kimliği doğrulanamadı."));
+
+        var result = await _adisyonService.AdisyonBirlestirAsync(request, kullaniciId);
+        if (result.Basarili)
+            await BroadcastMasalarAsync();
+
+        return result.Basarili ? Ok(result) : BadRequest(result);
+    }
+
     /// <summary>Helper method to extract the logged-in user's ID from JWT claims.
     /// Uses "sub" because DefaultInboundClaimTypeMap is cleared in Program.cs.</summary>
     private int GetCurrentUserId()
@@ -151,3 +197,4 @@ public class AdisyonController : ControllerBase
         await _hub.Clients.All.SendAsync("MasalarGuncellendi", masalar.Data);
     }
 }
+

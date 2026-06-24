@@ -251,4 +251,131 @@ public class AdisyonService : IAdisyonService
                 AnlikFiyat  = d.AnlikFiyat
             }).ToList()
         };
+
+    /// <summary>
+    /// Transfers the source table's active bill to an empty target table.
+    /// Reassigns the bill's MasaId, frees the source table, and marks the target as occupied.
+    /// Fails if the target table already has an open bill.
+    /// </summary>
+    public async Task<ApiResponse<AdisyonResponse>> AdisyonTasiAsync(AdisyonTasiRequest request, int kullaniciId)
+    {
+        if (request.KaynakMasaId == request.HedefMasaId)
+            return ApiResponse<AdisyonResponse>.Hata("Kaynak ve hedef masa aynı olamaz.");
+
+        var kaynakAdisyon = await _context.Adisyonlar
+            .Include(a => a.Detaylar)
+                .ThenInclude(d => d.Urun)
+            .Include(a => a.Masa)
+            .FirstOrDefaultAsync(a => a.MasaId == request.KaynakMasaId && a.Durum == AdisyonDurum.Acik);
+
+        if (kaynakAdisyon is null)
+            return ApiResponse<AdisyonResponse>.Hata("Kaynak masada açık adisyon bulunamadı.");
+
+        var hedefMasa = await _context.Masalar.FindAsync(request.HedefMasaId);
+        if (hedefMasa is null)
+            return ApiResponse<AdisyonResponse>.Hata($"Hedef masa bulunamadı. Id: {request.HedefMasaId}");
+
+        var hedefAdisyonVarMi = await _context.Adisyonlar
+            .AnyAsync(a => a.MasaId == request.HedefMasaId && a.Durum == AdisyonDurum.Acik);
+
+        if (hedefAdisyonVarMi)
+            return ApiResponse<AdisyonResponse>.Hata("Hedef masada zaten açık bir adisyon var. Birleştirme yapın.");
+
+        // Reassign the bill to the target table
+        var kaynakMasa = kaynakAdisyon.Masa;
+        kaynakAdisyon.MasaId   = request.HedefMasaId;
+        kaynakMasa.Durum       = MasaDurum.Bos;
+        hedefMasa.Durum        = MasaDurum.Dolu;
+
+        await _context.SaveChangesAsync();
+
+        // Reload navigations for mapping
+        await _context.Entry(kaynakAdisyon).Reference(a => a.Masa).LoadAsync();
+        foreach (var d in kaynakAdisyon.Detaylar)
+            await _context.Entry(d).Reference(det => det.Urun).LoadAsync();
+
+        _logger.LogInformation(
+            "Kullanıcı {KullaniciId}, adisyonu Masa {KaynakId}'den Masa {HedefId}'ye taşıdı. Adisyon Id: {AdisyonId}",
+            kullaniciId, request.KaynakMasaId, request.HedefMasaId, kaynakAdisyon.Id);
+
+        return ApiResponse<AdisyonResponse>.Basari(MapToResponse(kaynakAdisyon), "Adisyon başarıyla taşındı.");
+    }
+
+    /// <summary>
+    /// Merges the source table's active bill into the target table's open bill.
+    /// Products that already exist in the target bill have their quantities summed.
+    /// New products are added as separate line items.
+    /// The source bill is cancelled and the source table is freed.
+    /// Fails if the target table has no open bill.
+    /// </summary>
+    public async Task<ApiResponse<AdisyonResponse>> AdisyonBirlestirAsync(AdisyonTasiRequest request, int kullaniciId)
+    {
+        if (request.KaynakMasaId == request.HedefMasaId)
+            return ApiResponse<AdisyonResponse>.Hata("Kaynak ve hedef masa aynı olamaz.");
+
+        var kaynakAdisyon = await _context.Adisyonlar
+            .Include(a => a.Detaylar)
+            .Include(a => a.Masa)
+            .FirstOrDefaultAsync(a => a.MasaId == request.KaynakMasaId && a.Durum == AdisyonDurum.Acik);
+
+        if (kaynakAdisyon is null)
+            return ApiResponse<AdisyonResponse>.Hata("Kaynak masada açık adisyon bulunamadı.");
+
+        var hedefAdisyon = await _context.Adisyonlar
+            .Include(a => a.Detaylar)
+                .ThenInclude(d => d.Urun)
+            .Include(a => a.Masa)
+            .FirstOrDefaultAsync(a => a.MasaId == request.HedefMasaId && a.Durum == AdisyonDurum.Acik);
+
+        if (hedefAdisyon is null)
+            return ApiResponse<AdisyonResponse>.Hata("Hedef masada açık adisyon bulunamadı. Taşıma yapın.");
+
+        // Merge each source line into the target bill
+        foreach (var kaynakDetay in kaynakAdisyon.Detaylar)
+        {
+            var mevcutDetay = hedefAdisyon.Detaylar
+                .FirstOrDefault(d => d.UrunId == kaynakDetay.UrunId);
+
+            if (mevcutDetay is not null)
+            {
+                // Same product already exists → sum the quantities
+                mevcutDetay.Adet += kaynakDetay.Adet;
+            }
+            else
+            {
+                // New product → add a new line item to the target bill
+                hedefAdisyon.Detaylar.Add(new AdisyonDetay
+                {
+                    AdisyonId          = hedefAdisyon.Id,
+                    UrunId             = kaynakDetay.UrunId,
+                    EkleyenKullaniciId = kullaniciId,
+                    Adet               = kaynakDetay.Adet,
+                    AnlikFiyat         = kaynakDetay.AnlikFiyat
+                });
+            }
+        }
+
+        // Recalculate total for the target bill
+        hedefAdisyon.ToplamTutar = hedefAdisyon.Detaylar.Sum(d => d.Adet * d.AnlikFiyat);
+
+        // Cancel the source bill and free the source table
+        kaynakAdisyon.Durum              = AdisyonDurum.Iptal;
+        kaynakAdisyon.KapanisTarihi      = DateTime.UtcNow;
+        kaynakAdisyon.KapatanKullaniciId = kullaniciId;
+        kaynakAdisyon.Masa.Durum         = MasaDurum.Bos;
+
+        await _context.SaveChangesAsync();
+
+        // Reload navigations for mapping
+        await _context.Entry(hedefAdisyon).Reference(a => a.Masa).LoadAsync();
+        foreach (var d in hedefAdisyon.Detaylar)
+            await _context.Entry(d).Reference(det => det.Urun).LoadAsync();
+
+        _logger.LogInformation(
+            "Kullanıcı {KullaniciId}, Masa {KaynakId} adisyonunu Masa {HedefId} adisyonuyla birleştirdi. Hedef Adisyon Id: {AdisyonId}",
+            kullaniciId, request.KaynakMasaId, request.HedefMasaId, hedefAdisyon.Id);
+
+        return ApiResponse<AdisyonResponse>.Basari(MapToResponse(hedefAdisyon), "Adisyonlar başarıyla birleştirildi.");
+    }
 }
+

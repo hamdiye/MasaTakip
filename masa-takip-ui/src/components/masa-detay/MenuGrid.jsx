@@ -32,7 +32,7 @@ export default function MenuGrid({ masaId }) {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Panel Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 shrink-0">
         <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
           <BookOpen size={14} className="text-blue-400" />
         </div>
@@ -43,7 +43,7 @@ export default function MenuGrid({ masaId }) {
       </div>
 
       {/* Search */}
-      <div className="px-4 py-2.5 border-b border-white/5">
+      <div className="px-4 py-2.5 border-b border-white/5 shrink-0">
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           <input
@@ -59,11 +59,13 @@ export default function MenuGrid({ masaId }) {
       </div>
 
       {/* Category filter */}
+      <div className="shrink-0">
       <KategoriFiltre
         kategoriler={kategoriler}
         aktifId={aktifKategoriId}
         onSelect={(id) => { setAktifKategoriId(id); setAramaMetni('') }}
       />
+      </div>
 
       {/* Product grid */}
       <div className="flex-1 overflow-y-auto p-3">

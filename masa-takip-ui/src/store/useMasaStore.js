@@ -318,6 +318,82 @@ const useMasaStore = create((set, get) => ({
   },
 
   /**
+   * Transfers the source table's active bill to an empty target table.
+   * Source table becomes free; target table becomes occupied.
+   * @param {number} kaynakMasaId - Source table ID
+   * @param {number} hedefMasaId  - Target table ID (must be empty)
+   * @returns {{ success: boolean, message?: string }}
+   */
+  adisyonTasi: async (kaynakMasaId, hedefMasaId) => {
+    try {
+      const res = await api.post('/api/adisyon/tasi', { kaynakMasaId, hedefMasaId })
+      if (res.basarili && res.data) {
+        const detaylar = res.data.detaylar.map((d) => ({
+          id: d.id,
+          urunId: d.urunId,
+          adi: d.urunAdi,
+          adet: d.adet,
+          anlikFiyat: d.anlikFiyat,
+        }))
+        set((state) => {
+          const { [kaynakMasaId]: _removed, ...kalanAdisyonlar } = state.adisyonlar
+          return {
+            adisyonlar: { ...kalanAdisyonlar, [hedefMasaId]: detaylar },
+            masalar: state.masalar.map((m) => {
+              if (m.id === kaynakMasaId) return { ...m, durum: 'Bos', toplamTutar: 0 }
+              if (m.id === hedefMasaId)  return { ...m, durum: 'Dolu', toplamTutar: res.data.toplamTutar }
+              return m
+            }),
+          }
+        })
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Adisyon taşınamadı.' }
+    } catch (err) {
+      console.error('adisyonTasi error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
+   * Merges the source table's bill into the target table's existing open bill.
+   * Same products have their quantities summed. Source table becomes free.
+   * @param {number} kaynakMasaId - Source table ID
+   * @param {number} hedefMasaId  - Target table ID (must have an open bill)
+   * @returns {{ success: boolean, message?: string }}
+   */
+  adisyonBirlestir: async (kaynakMasaId, hedefMasaId) => {
+    try {
+      const res = await api.post('/api/adisyon/birlestir', { kaynakMasaId, hedefMasaId })
+      if (res.basarili && res.data) {
+        const detaylar = res.data.detaylar.map((d) => ({
+          id: d.id,
+          urunId: d.urunId,
+          adi: d.urunAdi,
+          adet: d.adet,
+          anlikFiyat: d.anlikFiyat,
+        }))
+        set((state) => {
+          const { [kaynakMasaId]: _removed, ...kalanAdisyonlar } = state.adisyonlar
+          return {
+            adisyonlar: { ...kalanAdisyonlar, [hedefMasaId]: detaylar },
+            masalar: state.masalar.map((m) => {
+              if (m.id === kaynakMasaId) return { ...m, durum: 'Bos', toplamTutar: 0 }
+              if (m.id === hedefMasaId)  return { ...m, durum: 'Dolu', toplamTutar: res.data.toplamTutar }
+              return m
+            }),
+          }
+        })
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Adisyon birleştirilemedi.' }
+    } catch (err) {
+      console.error('adisyonBirlestir error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
+    }
+  },
+
+  /**
    * Removes a product line entirely from a table's bill.
    * If the bill becomes empty, the backend auto-cancels it and the store entry is removed.
    * @param {number} masaId

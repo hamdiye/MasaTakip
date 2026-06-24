@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Receipt, ShoppingBag, AlertTriangle } from 'lucide-react'
 import AdisyonDetayItem from './AdisyonDetayItem'
@@ -13,9 +13,9 @@ const EMPTY_DETAYLAR = []
 
 /**
  * Left panel showing the current bill items and payment section.
- * Handles the "last item removal" confirmation flow: when the user tries to
- * remove the last item (by trash or minus), a confirm dialog is shown before
- * the bill is cancelled and the table is freed.
+ * Layout: header (fixed) → scrollable items list → payment section (pinned to bottom).
+ * The payment section is absolutely positioned so it always stays visible
+ * regardless of how many items are in the bill or how tall the panel is.
  * @param {number} masaId - Table ID
  */
 export default function AdisyonListesi({ masaId }) {
@@ -36,6 +36,20 @@ export default function AdisyonListesi({ masaId }) {
   const [bekleyenIslem, setBekleyenIslem]   = useState(null) // () => Promise<void>
   const [iptalOnayAcik, setIptalOnayAcik]  = useState(false)
   const [isIptalEdiliyor, setIsIptalEdiliyor] = useState(false)
+
+  // Measure the payment panel height so the items list gets matching bottom padding,
+  // ensuring the last item is never hidden behind the pinned payment section.
+  const odemePaneliRef  = useRef(null)
+  const [odemePaneliH, setOdemePaneliH] = useState(220)
+
+  useLayoutEffect(() => {
+    if (!odemePaneliRef.current) return
+    const observer = new ResizeObserver(([entry]) => {
+      setOdemePaneliH(entry.contentRect.height)
+    })
+    observer.observe(odemePaneliRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   /**
    * Called by AdisyonDetayItem when removing the item would empty the bill.
@@ -74,12 +88,17 @@ export default function AdisyonListesi({ masaId }) {
 
   return (
     <>
+      {/*
+        Outer div uses `relative` so the payment panel can be absolutely pinned
+        to the bottom without being clipped by parent overflow.
+        `flex-1 min-h-0` still lets it grow/shrink inside the split-panel row.
+      */}
       <div
-        className="flex flex-col flex-1 min-h-0"
+        className="relative flex flex-col flex-1 min-h-0 overflow-hidden"
         style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        {/* ── Header ──────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-orange-500/20 flex items-center justify-center">
               <Receipt size={14} className="text-orange-400" />
@@ -91,8 +110,15 @@ export default function AdisyonListesi({ masaId }) {
           </span>
         </div>
 
-        {/* Items list */}
-        <div className="flex-1 overflow-y-auto">
+        {/* ── Items list ──────────────────────────────────────── */}
+        {/*
+          padding-bottom equals the measured height of the pinned payment panel
+          so the last list item is never hidden behind it.
+        */}
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{ paddingBottom: odemePaneliH }}
+        >
           {detaylar.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-600 py-12">
               <ShoppingBag size={36} className="text-slate-700" />
@@ -114,11 +140,17 @@ export default function AdisyonListesi({ masaId }) {
           )}
         </div>
 
-        {/* Payment panel at bottom */}
-        <OdemePaneli masaId={masaId} toplamTutar={toplamTutar} />
+        {/* ── Payment panel — always pinned to bottom ─────────── */}
+        <div
+          ref={odemePaneliRef}
+          className="absolute bottom-0 left-0 right-0"
+          style={{ background: 'var(--color-bg)' }}
+        >
+          <OdemePaneli masaId={masaId} toplamTutar={toplamTutar} />
+        </div>
       </div>
 
-      {/* Adisyon iptal onay modalı */}
+      {/* ── Adisyon iptal onay modalı ───────────────────────────── */}
       <Modal isOpen={iptalOnayAcik} onClose={handleIptalVazgec} title="Adisyon İptal">
         <div className="flex flex-col items-center gap-5 py-2">
           {/* İkon */}

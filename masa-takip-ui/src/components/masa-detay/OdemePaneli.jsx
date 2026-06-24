@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, CreditCard, Banknote, QrCode } from 'lucide-react'
+import { CheckCircle, CreditCard, Banknote, QrCode, ArrowRightLeft } from 'lucide-react'
 import Modal from '../common/Modal'
+import AdisyonTasiModal from './AdisyonTasiModal'
 import useMasaStore from '../../store/useMasaStore'
 import useAuthStore from '../../store/useAuthStore'
 
@@ -20,6 +21,7 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
   const [isOpen, setIsOpen]           = useState(false)
   const [seciliOdeme, setSeciliOdeme] = useState(null)
   const [odemeAlindi, setOdemeAlindi] = useState(false)
+  const [tasiModalAcik, setTasiModalAcik] = useState(false)
   const navigate = useNavigate()
   const hesabiKapat = useMasaStore((s) => s.hesabiKapat)
   const adisyonIptal = useMasaStore((s) => s.adisyonIptal)
@@ -52,7 +54,7 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
   return (
     <>
       {/* Summary section */}
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4">
         {/* Subtotal rows */}
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-slate-500">Ara Toplam</span>
@@ -88,6 +90,18 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
           {user?.rol !== 'Admin' ? 'Ödeme Yetkisi Yok (Sadece Kasa)' : 'Hesabı Kapat – Ödeme Al'}
         </button>
 
+        {/* Taşı / Birleştir button: visible to all roles when bill has items */}
+        {toplamTutar > 0 && (
+          <button
+            id="btn-adisyon-tasi"
+            onClick={() => setTasiModalAcik(true)}
+            className="btn bg-blue-600/20 hover:bg-blue-600/30 active:bg-blue-600/40 text-blue-300 border border-blue-500/30 hover:border-blue-500/50 w-full text-xs py-2 mt-2 cursor-pointer flex items-center justify-center gap-1.5 rounded-xl font-bold transition-colors"
+          >
+            <ArrowRightLeft size={13} />
+            Taşı / Birleştir
+          </button>
+        )}
+
         {/* Cancel button: visible only to Admin */}
         {user?.rol === 'Admin' && (
           <button
@@ -108,6 +122,13 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
           </button>
         )}
       </div>
+
+      {/* Transfer / Merge Modal */}
+      <AdisyonTasiModal
+        masaId={masaId}
+        isOpen={tasiModalAcik}
+        onClose={() => setTasiModalAcik(false)}
+      />
 
       {/* Payment Modal */}
       <Modal isOpen={isOpen} onClose={handleClose} title="Ödeme Al">
