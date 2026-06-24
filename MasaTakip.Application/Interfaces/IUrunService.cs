@@ -55,4 +55,10 @@ public interface IUrunService
         Stream dosyaAkisi,
         string dosyaAdi,
         long   dosyaBoyutu);
+
+    /// <summary>
+    /// Deletes the product image from disk and clears GorselUrl.
+    /// </summary>
+    /// <param name="id">Target product ID.</param>
+    Task<ApiResponse<UrunResponse>> GorselSilAsync(int id);
 }

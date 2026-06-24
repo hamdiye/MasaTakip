@@ -98,6 +98,26 @@ public class UrunlerController : ControllerBase
     }
 
     /// <summary>
+    /// Removes the product image (Admin only).
+    /// Broadcasts "MenuGuncellendi" to all connected clients on success.
+    /// </summary>
+    [HttpDelete("{id:int}/gorsel")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<UrunResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UrunResponse>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GorselSil(int id)
+    {
+        var result = await _urunService.GorselSilAsync(id);
+        if (!result.Basarili)
+        {
+            return NotFound(result);
+        }
+
+        await _hub.Clients.All.SendAsync("MenuGuncellendi", new { tip = "gorsel-silindi" });
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Updates an existing product (Admin only).
     /// Broadcasts "MenuGuncellendi" to all connected clients on success.
     /// </summary>

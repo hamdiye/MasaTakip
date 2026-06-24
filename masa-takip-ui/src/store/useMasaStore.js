@@ -510,14 +510,16 @@ const useMasaStore = create((set, get) => ({
   },
 
   /**
-   * Updates an existing product and optionally replaces its image (Admin only).
+   * Updates an existing product and optionally replaces or removes its image (Admin only).
    */
-  urunGuncelleAdmin: async (id, urunRequest, imageFile) => {
+  urunGuncelleAdmin: async (id, urunRequest, imageFile, gorselKaldirildi) => {
     try {
       const res = await api.put(`/api/urunler/${id}`, urunRequest)
       if (!res.basarili) {
         return { success: false, message: res.mesaj || 'Ürün güncellenemedi.' }
       }
+
+      let warningMsg = null;
 
       if (imageFile) {
         const formData = new FormData()
@@ -533,11 +535,28 @@ const useMasaStore = create((set, get) => ({
 
         if (!uploadRes.ok) {
           const errData = await uploadRes.json().catch(() => ({}))
-          return { success: true, warning: errData.mesaj || 'Ürün bilgileri güncellendi fakat yeni görsel yüklenemedi.' }
+          warningMsg = errData.mesaj || 'Ürün bilgileri güncellendi fakat yeni görsel yüklenemedi.'
+        }
+      } else if (gorselKaldirildi) {
+        const state = useAuthStore.getState()
+        const token = state.user?.token
+        const uploadRes = await fetch(`${BASE_URL}/api/urunler/${id}/gorsel`, {
+          method: 'DELETE',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
+
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}))
+          warningMsg = errData.mesaj || 'Ürün bilgileri güncellendi fakat görsel kaldırılamadı.'
         }
       }
 
       await get().loadUrunler()
+      
+      if (warningMsg) {
+        return { success: true, warning: warningMsg }
+      }
+      
       return { success: true }
     } catch (err) {
       console.error('urunGuncelleAdmin error:', err)

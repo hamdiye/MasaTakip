@@ -23,6 +23,10 @@ export default defineConfig({
         target: backendUrl,
         changeOrigin: true,
       },
+      '/images': {
+        target: backendUrl,
+        changeOrigin: true,
+      },
       // SignalR WebSocket bağlantıları için — ws:true zorunludur
       '/hubs': {
         target: backendUrl,

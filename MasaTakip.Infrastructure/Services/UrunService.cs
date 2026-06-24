@@ -137,6 +137,41 @@ public class UrunService : IUrunService
     }
 
     /// <summary>
+    /// Deletes the product image from disk and clears GorselUrl in database.
+    /// </summary>
+    public async Task<ApiResponse<UrunResponse>> GorselSilAsync(int id)
+    {
+        var urun = await _context.Urunler
+            .Include(u => u.Kategori)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (urun is null)
+            return ApiResponse<UrunResponse>.Hata($"Ürün bulunamadı. Id: {id}");
+
+        if (!string.IsNullOrEmpty(urun.GorselUrl))
+        {
+            var kayitKlasoru = Path.Combine(_env.ContentRootPath, "wwwroot", "images", "urunler");
+            var dosyaAdi = Path.GetFileName(urun.GorselUrl);
+            var dosyaYolu = Path.Combine(kayitKlasoru, dosyaAdi);
+            if (File.Exists(dosyaYolu))
+            {
+                try
+                {
+                    File.Delete(dosyaYolu);
+                }
+                catch (Exception)
+                {
+                    // Ignore image file deletion errors
+                }
+            }
+            urun.GorselUrl = null;
+            await _context.SaveChangesAsync();
+        }
+
+        return ApiResponse<UrunResponse>.Basari(MapToResponse(urun), "Görsel başarıyla silindi.");
+    }
+
+    /// <summary>
     /// Updates product details in the database.
     /// </summary>
     public async Task<ApiResponse<UrunResponse>> UrunGuncelleAsync(int id, UrunGuncelleRequest request)

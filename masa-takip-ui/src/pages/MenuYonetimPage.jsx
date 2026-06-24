@@ -182,7 +182,7 @@ export default function MenuYonetimPage() {
     if (modalMode === 'add') {
       result = await urunEkleAdmin(requestData, gorselDosya)
     } else {
-      result = await urunGuncelleAdmin(selectedUrun.id, requestData, gorselDosya)
+      result = await urunGuncelleAdmin(selectedUrun.id, requestData, gorselDosya, gorselOnizleme === '')
     }
 
     setIsSubmitPending(false)
