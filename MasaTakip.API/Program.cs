@@ -225,9 +225,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("LokalPolitika");
 app.UseDefaultFiles();
-// Statik dosyalar (yüklenen ürün görselleri) — wwwroot/ klasöründen servis edilir
+// Mevcut wwwroot klasörü için varsayılan static file mapping'i
 app.UseStaticFiles();
 
+// Kalıcı resim klasörünü oluştur ve /images/urunler adresine map et
+var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+if (string.IsNullOrEmpty(appDataPath))
+    appDataPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
+    
+var persistentImagesPath = Path.Combine(appDataPath, "MasaTakip", "Images", "urunler");
+if (!Directory.Exists(persistentImagesPath))
+{
+    Directory.CreateDirectory(persistentImagesPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(persistentImagesPath),
+    RequestPath = "/images/urunler"
+});
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

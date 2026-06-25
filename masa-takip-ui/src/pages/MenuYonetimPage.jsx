@@ -363,7 +363,7 @@ export default function MenuYonetimPage() {
               className="glass rounded-2xl overflow-hidden flex flex-col hover:border-white/15 transition-all duration-300 group"
             >
               {/* Product Image */}
-              <div className="aspect-[4/3] bg-white/5 relative flex items-center justify-center overflow-hidden border-b border-white/5">
+              <div key={urun.gorselUrl || 'no-image'} className="aspect-[4/3] bg-white/5 relative flex items-center justify-center overflow-hidden border-b border-white/5">
                 {urun.gorselUrl ? (
                   <img
                     src={getGorselUrl(urun.gorselUrl)}

@@ -107,8 +107,12 @@ public class UrunService : IUrunService
         if (!_izinliUzantilar.Contains(uzanti))
             return ApiResponse<UrunResponse>.Hata("Sadece .jpg, .jpeg, .png ve .webp formatları desteklenmektedir.");
 
-        // 4 — Kayıt klasörünü hazırla (wwwroot/images/urunler)
-        var kayitKlasoru = Path.Combine(_env.ContentRootPath, "wwwroot", "images", "urunler");
+        // 4 — Kayıt klasörünü hazırla (Kalıcı dizin: C:\ProgramData\MasaTakip\Images\urunler)
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        if (string.IsNullOrEmpty(appDataPath))
+            appDataPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
+            
+        var kayitKlasoru = Path.Combine(appDataPath, "MasaTakip", "Images", "urunler");
         Directory.CreateDirectory(kayitKlasoru);
 
         // 5 — Eski görseli sil
@@ -150,7 +154,11 @@ public class UrunService : IUrunService
 
         if (!string.IsNullOrEmpty(urun.GorselUrl))
         {
-            var kayitKlasoru = Path.Combine(_env.ContentRootPath, "wwwroot", "images", "urunler");
+            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            if (string.IsNullOrEmpty(appDataPath))
+                appDataPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data");
+                
+            var kayitKlasoru = Path.Combine(appDataPath, "MasaTakip", "Images", "urunler");
             var dosyaAdi = Path.GetFileName(urun.GorselUrl);
             var dosyaYolu = Path.Combine(kayitKlasoru, dosyaAdi);
             if (File.Exists(dosyaYolu))

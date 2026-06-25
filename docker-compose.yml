@@ -28,6 +28,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=MasaTakipDb;Username=postgres;Password=postgres
+    volumes:
+      - ./MasaTakip_Data:/usr/share/MasaTakip
     depends_on:
       db:
         condition: service_healthy
