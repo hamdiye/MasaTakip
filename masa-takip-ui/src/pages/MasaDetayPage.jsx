@@ -143,12 +143,11 @@ export default function MasaDetayPage() {
       <div className="flex flex-1 min-h-0 overflow-hidden">
 
         {/* Sol Panel – Adisyon Listesi */}
+        {/* Mobil: yalnızca adisyon sekmesinde tam genişlik | Tablet+: her zaman %40 */}
         <div
           className={clsx(
-            'flex flex-col min-h-0 overflow-hidden',
-            // Mobil: sadece 'adisyon' sekmesinde göster
-            aktifSekme === 'adisyon' ? 'flex' : 'hidden',
-            // Tablet+: her zaman göster, genişlik %40
+            'flex-col min-h-0 overflow-hidden',
+            aktifSekme === 'adisyon' ? 'flex w-full' : 'hidden',
             'md:flex md:w-2/5 lg:w-[38%]'
           )}
         >
@@ -156,9 +155,10 @@ export default function MasaDetayPage() {
         </div>
 
         {/* Sağ Panel – Menü Grid */}
+        {/* Mobil: yalnızca menü sekmesinde tam genişlik | Tablet+: her zaman flex-1 */}
         <div
           className={clsx(
-            'flex flex-col min-h-0 overflow-hidden',
+            'flex-col min-h-0 overflow-hidden',
             aktifSekme === 'menu' ? 'flex w-full' : 'hidden',
             'md:flex md:flex-1'
           )}

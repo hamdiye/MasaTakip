@@ -15,7 +15,7 @@ import {
 import useMasaStore from '../store/useMasaStore'
 import useAuthStore from '../store/useAuthStore'
 import clsx from 'clsx'
-
+import { BASE_URL } from '../utils/api'
 export default function MenuYonetimPage() {
   const {
     urunler,
@@ -79,9 +79,11 @@ export default function MenuYonetimPage() {
   const getGorselUrl = (path) => {
     if (!path) return null
     if (path.startsWith('http') || path.startsWith('data:')) return path
-    const base = import.meta.env.VITE_API_URL
-      ?? (import.meta.env.DEV ? '' : window.location.origin)
-    return `${base}${path}`
+    
+    const cleanBase = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    
+    return `${cleanBase}${cleanPath}`
   }
 
   // Handle product edit initiation
