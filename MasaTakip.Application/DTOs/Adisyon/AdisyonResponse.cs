@@ -6,7 +6,7 @@ namespace MasaTakip.Application.DTOs.Adisyon;
 public class AdisyonResponse
 {
     public int Id { get; init; }
-    public int MasaId { get; init; }
+    public int? MasaId { get; init; }
     public string MasaAdi { get; init; } = string.Empty;
     public string Durum { get; init; } = string.Empty;
     public decimal ToplamTutar { get; init; }

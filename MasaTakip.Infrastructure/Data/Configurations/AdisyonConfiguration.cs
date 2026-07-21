@@ -32,7 +32,8 @@ public class AdisyonConfiguration : IEntityTypeConfiguration<Adisyon>
         builder.HasOne(a => a.Masa)
             .WithMany(m => m.Adisyonlar)
             .HasForeignKey(a => a.MasaId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(a => a.OlusturanKullanici)
             .WithMany()

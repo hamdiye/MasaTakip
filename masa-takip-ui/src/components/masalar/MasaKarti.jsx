@@ -63,10 +63,15 @@ export default function MasaKarti({ masa, toplamTutar, onDelete }) {
         <div
           onClick={(e) => {
             e.stopPropagation()
-            onDelete(masa)
+            if (!isDolu) onDelete(masa)
           }}
-          className="absolute top-2 right-2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-white/5 bg-white/5 transition-all z-20 cursor-pointer"
-          title="Masayı Sil"
+          className={clsx(
+            'absolute top-2 right-2 w-6 h-6 rounded-md flex items-center justify-center border border-white/5 transition-all z-20',
+            isDolu
+              ? 'text-slate-600 bg-white/5 cursor-not-allowed opacity-40'
+              : 'text-slate-400 hover:text-red-400 hover:bg-red-500/10 bg-white/5 cursor-pointer'
+          )}
+          title={isDolu ? 'Masada aktif sipariş var, silinemez' : 'Masayı Sil'}
         >
           <Trash2 size={12} />
         </div>

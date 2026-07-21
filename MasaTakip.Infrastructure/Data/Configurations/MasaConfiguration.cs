@@ -23,9 +23,5 @@ public class MasaConfiguration : IEntityTypeConfiguration<Masa>
             .HasConversion<string>()
             .HasMaxLength(10);
 
-        builder.HasMany(m => m.Adisyonlar)
-            .WithOne(a => a.Masa)
-            .HasForeignKey(a => a.MasaId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

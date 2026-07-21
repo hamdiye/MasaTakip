@@ -71,17 +71,27 @@ public class MasaService : IMasaService
         return ApiResponse<MasaResponse>.Basari(response, "Masa başarıyla eklendi.");
     }
 
-    /// <summary>Deletes a table by ID (Admin only). Returns error if table has historical or active bills.</summary>
+    /// <summary>Deletes a table by ID (Admin only). Returns error if table has an active (open) bill. Past bills remain with MasaId set to null.</summary>
     public async Task<ApiResponse<bool>> MasaSilAsync(int id)
     {
         var masa = await _context.Masalar.FindAsync(id);
         if (masa is null)
             return ApiResponse<bool>.Hata("Masa bulunamadı.");
 
-        // Check if table has any bills
-        var hasAdisyon = await _context.Adisyonlar.AnyAsync(a => a.MasaId == id);
-        if (hasAdisyon)
-            return ApiResponse<bool>.Hata("Bu masaya ait geçmiş veya aktif sipariş kayıtları bulunmaktadır. Bu nedenle silinemez.");
+        // Sadece aktif (açık) adisyon varsa engelle
+        var hasAcikAdisyon = await _context.Adisyonlar
+            .AnyAsync(a => a.MasaId == id && a.Durum == AdisyonDurum.Acik);
+
+        if (hasAcikAdisyon)
+            return ApiResponse<bool>.Hata("Bu masada açık adisyon bulunmaktadır. Önce adisyonu kapatmanız gerekmektedir.");
+
+        // Geçmiş adisyonların MasaId'sini NULL yap (adisyon kaydı korunur)
+        var gecmisAdisyonlar = await _context.Adisyonlar
+            .Where(a => a.MasaId == id)
+            .ToListAsync();
+
+        foreach (var adisyon in gecmisAdisyonlar)
+            adisyon.MasaId = null;
 
         _context.Masalar.Remove(masa);
         await _context.SaveChangesAsync();

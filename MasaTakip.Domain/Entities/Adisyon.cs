@@ -8,7 +8,7 @@ namespace MasaTakip.Domain.Entities;
 public class Adisyon
 {
     public int Id { get; set; }
-    public int MasaId { get; set; }
+    public int? MasaId { get; set; }
     public int OlusturanKullaniciId { get; set; }
     public int? KapatanKullaniciId { get; set; }
     public decimal ToplamTutar { get; set; }
@@ -18,7 +18,7 @@ public class Adisyon
     public OdemeTipi? OdemeTipi { get; set; }
 
     // Navigation properties
-    public Masa Masa { get; set; } = null!;
+    public Masa? Masa { get; set; }
     public Kullanici OlusturanKullanici { get; set; } = null!;
     public Kullanici? KapatanKullanici { get; set; }
     public ICollection<AdisyonDetay> Detaylar { get; set; } = new List<AdisyonDetay>();

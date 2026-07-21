@@ -27,6 +27,8 @@ export default function MasalarPage() {
   }, [loadMasalar])
 
   const handleDeleteClick = (masa) => {
+    // Sadece aktif (Dolu) masalar engelleniyor; boş masalar geçmiş adisyon olsa bile silinebilir
+    if (masa.durum === 'Dolu') return
     setSelectedMasa(masa)
     setDeleteError('')
     setIsDeleteOpen(true)
@@ -142,7 +144,6 @@ export default function MasalarPage() {
         <MasaGrid masalar={filtreliMasalar} onDeleteMasa={handleDeleteClick} />
       </div>
 
-      {/* ─── MODAL: Delete Table Confirmation ───────────────── */}
       <Modal
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
@@ -156,29 +157,52 @@ export default function MasalarPage() {
             </div>
           )}
 
-          <p className="text-sm text-slate-300">
-            <strong className="text-white">{selectedMasa?.adi}</strong> isimli masayı silmek istediğinize emin misiniz?
-          </p>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/5 mt-2">
-            <button
-              type="button"
-              onClick={() => setIsDeleteOpen(false)}
-              className="btn btn-ghost text-xs"
-              disabled={isDeletePending}
-            >
-              Vazgeç
-            </button>
-            <button
-              onClick={handleDeleteConfirm}
-              className="btn bg-red-600 hover:bg-red-700 text-white min-w-[100px] text-xs"
-              disabled={isDeletePending}
-            >
-              {isDeletePending ? 'Siliniyor...' : 'Evet, Sil'}
-            </button>
-          </div>
+          {selectedMasa?.durum === 'Dolu' ? (
+            <>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-white">{selectedMasa?.adi}</strong> masasında aktif sipariş bulunmakta.
+                  Önce adisyonu kapatmanız veya iptal etmeniz gerekiyor.
+                </span>
+              </div>
+              <div className="flex items-center justify-end pt-3 border-t border-white/5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteOpen(false)}
+                  className="btn btn-ghost text-xs"
+                >
+                  Kapat
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-slate-300">
+                <strong className="text-white">{selectedMasa?.adi}</strong> isimli masayı silmek istediğinize emin misiniz?
+              </p>
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteOpen(false)}
+                  className="btn btn-ghost text-xs"
+                  disabled={isDeletePending}
+                >
+                  Vazgeç
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="btn bg-red-600 hover:bg-red-700 text-white min-w-[100px] text-xs"
+                  disabled={isDeletePending}
+                >
+                  {isDeletePending ? 'Siliniyor...' : 'Evet, Sil'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
+
     </div>
   )
 }
