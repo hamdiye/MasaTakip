@@ -3,7 +3,6 @@ using MasaTakip.Application.DTOs.Rapor;
 using MasaTakip.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace MasaTakip.API.Controllers;
 
@@ -28,6 +27,29 @@ public class RaporController : ControllerBase
     public async Task<IActionResult> GetRaporOzet()
     {
         var result = await _raporService.GetRaporOzetAsync();
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns all closed bills, optionally filtered by a date range.
+    /// Query params: baslangic (ISO date), bitis (ISO date).
+    /// </summary>
+    [HttpGet("satislar")]
+    [ProducesResponseType(typeof(ApiResponse<List<SonSatisDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSatislar(
+        [FromQuery] DateTime? baslangic,
+        [FromQuery] DateTime? bitis)
+    {
+        var result = await _raporService.GetSatislarAsync(baslangic, bitis);
+        return Ok(result);
+    }
+
+    /// <summary>Permanently deletes a closed (Kapali) bill record by ID. Active bills cannot be deleted.</summary>
+    [HttpDelete("satislar/{id:int}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SatisSil(int id)
+    {
+        var result = await _raporService.AdisyonSilAsync(id);
         return Ok(result);
     }
 }

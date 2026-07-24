@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, CreditCard, Banknote, QrCode, ArrowRightLeft } from 'lucide-react'
+import { CheckCircle, CreditCard, Banknote, ArrowRightLeft } from 'lucide-react'
 import Modal from '../common/Modal'
 import AdisyonTasiModal from './AdisyonTasiModal'
 import useMasaStore from '../../store/useMasaStore'
 import useAuthStore from '../../store/useAuthStore'
 
 const odemeTipleri = [
-  { id: 'nakit',  label: 'Nakit',   icon: Banknote,    color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-  { id: 'kart',   label: 'Kart',    icon: CreditCard,  color: 'text-blue-400',    bg: 'bg-blue-500/15'    },
-  { id: 'qr',     label: 'QR/Link', icon: QrCode,      color: 'text-purple-400',  bg: 'bg-purple-500/15'  },
+  { id: 'nakit', label: 'Nakit', icon: Banknote,   color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+  { id: 'kart',  label: 'Kart',  icon: CreditCard, color: 'text-blue-400',    bg: 'bg-blue-500/15'    },
 ]
 
 /**
@@ -19,7 +18,7 @@ const odemeTipleri = [
  */
 export default function OdemePaneli({ masaId, toplamTutar }) {
   const [isOpen, setIsOpen]           = useState(false)
-  const [seciliOdeme, setSeciliOdeme] = useState(null)
+  const [seciliOdeme, setSeciliOdeme] = useState('nakit')
   const [odemeAlindi, setOdemeAlindi] = useState(false)
   const [tasiModalAcik, setTasiModalAcik] = useState(false)
   const navigate = useNavigate()
@@ -47,7 +46,7 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
 
   const handleClose = () => {
     setIsOpen(false)
-    setSeciliOdeme(null)
+    setSeciliOdeme('nakit')
     setOdemeAlindi(false)
   }
 
@@ -55,26 +54,14 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
     <>
       {/* Summary section */}
       <div className="p-4">
-        {/* Subtotal rows */}
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-slate-500">Ara Toplam</span>
-          <span className="text-xs text-slate-400">₺{toplamTutar.toLocaleString('tr-TR')}</span>
-        </div>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-slate-500">KDV (%8)</span>
-          <span className="text-xs text-slate-400">
-            ₺{(toplamTutar * 0.08).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-          </span>
-        </div>
-
         {/* Total */}
         <div
           className="flex items-center justify-between p-3 rounded-xl mb-4"
           style={{ background: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.20)' }}
         >
-          <span className="text-sm font-bold text-white">Genel Toplam</span>
+          <span className="text-sm font-bold text-white">Toplam Tutar</span>
           <span className="text-lg font-extrabold text-orange-400">
-            ₺{(toplamTutar * 1.08).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+            ₺{toplamTutar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
           </span>
         </div>
 
@@ -146,14 +133,14 @@ export default function OdemePaneli({ masaId, toplamTutar }) {
             <div className="text-center">
               <p className="text-sm text-slate-400 mb-1">Tahsil Edilecek Tutar</p>
               <p className="text-3xl font-extrabold text-orange-400">
-                ₺{(toplamTutar * 1.08).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                ₺{toplamTutar.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
               </p>
             </div>
 
             {/* Payment type selection */}
             <div className="flex flex-col gap-2">
               <p className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Ödeme Tipi</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {odemeTipleri.map(({ id, label, icon: Icon, color, bg }) => (
                   <button
                     key={id}

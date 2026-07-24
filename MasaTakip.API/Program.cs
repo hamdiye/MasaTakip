@@ -249,8 +249,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 // ─────────────────────────────────────────────
-// 9. SignalR Hub endpoint
+// 9. SignalR Hub & SPA Fallback endpoints
 // ─────────────────────────────────────────────
 app.MapHub<MasaHub>("/hubs/masa");
+
+// SPA Fallback: /login, /menu vb. doğrudan adres çubuğundan veya mobil kısayoldan açıldığında index.html sunulur
+app.MapFallbackToFile("index.html");
 
 app.Run();

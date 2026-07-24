@@ -28,6 +28,7 @@ const useMasaStore = create((set, get) => ({
   kategoriler: [{ id: 0, adi: 'Tümü' }],
   isLoading: false,
   raporData: null,
+  satislar: [],
   kullanicilar: [],
 
   // ─── Getters (selector helpers) ─────────────────────────────────────────────
@@ -596,6 +597,51 @@ const useMasaStore = create((set, get) => ({
     } catch (err) {
       console.error('loadRaporlar error:', err)
       set({ isLoading: false })
+    }
+  },
+
+  /**
+   * Loads all closed bills, optionally filtered by date range.
+   * @param {string|null} baslangic - ISO date string (e.g. '2026-07-01')
+   * @param {string|null} bitis     - ISO date string (e.g. '2026-07-21')
+   */
+  loadSatislar: async (baslangic = null, bitis = null) => {
+    set({ isLoading: true })
+    try {
+      let url = '/api/rapor/satislar'
+      const params = []
+      if (baslangic) params.push(`baslangic=${encodeURIComponent(baslangic)}`)
+      if (bitis)     params.push(`bitis=${encodeURIComponent(bitis)}`)
+      if (params.length > 0) url += '?' + params.join('&')
+
+      const res = await api.get(url)
+      if (res.basarili) {
+        set({ satislar: res.data ?? [], isLoading: false })
+      } else {
+        set({ isLoading: false })
+      }
+    } catch (err) {
+      console.error('loadSatislar error:', err)
+      set({ isLoading: false })
+    }
+  },
+
+  /**
+   * Deletes a closed bill (Admin only).
+   * @param {number} id - Adisyon ID to delete
+   * @returns {{ success: boolean, message?: string }}
+   */
+  satisSilAdmin: async (id) => {
+    try {
+      const res = await api.delete(`/api/rapor/satislar/${id}`)
+      if (res.basarili) {
+        set((state) => ({ satislar: state.satislar.filter((s) => s.adisyonId !== id) }))
+        return { success: true }
+      }
+      return { success: false, message: res.mesaj || 'Satış silinemedi.' }
+    } catch (err) {
+      console.error('satisSilAdmin error:', err)
+      return { success: false, message: 'Bağlantı hatası oluştu.' }
     }
   },
 

@@ -72,16 +72,6 @@ public class AuthService : IAuthService
     /// <summary>Creates a new user with a BCrypt-hashed PIN code. Only accessible by Admin.</summary>
     public async Task<ApiResponse<KullaniciResponse>> KullaniciOlusturAsync(KullaniciOlusturRequest request)
     {
-        var kullanicilar = await _context.Kullanicilar
-            .Where(k => k.AktifMi)
-            .ToListAsync();
-
-        var çakışmaVarMı = kullanicilar
-            .Any(k => BCryptNet.Verify(request.PinCode, k.PinCodeHashed));
-
-        if (çakışmaVarMı)
-            return ApiResponse<KullaniciResponse>.Hata("Bu PIN kodu zaten kullanımda.");
-
         var kullanici = new Kullanici
         {
             Isim           = request.Isim,
@@ -163,17 +153,9 @@ public class AuthService : IAuthService
                 return ApiResponse<KullaniciResponse>.Hata("İlk yönetici pasif duruma getirilemez.");
         }
 
-        // Check PIN collision if PIN is updated
+        // Update PIN if provided
         if (!string.IsNullOrEmpty(request.PinCode))
         {
-            var digerleri = await _context.Kullanicilar
-                .Where(k => k.Id != id && k.AktifMi)
-                .ToListAsync();
-
-            var cakismaVarMi = digerleri.Any(k => BCryptNet.Verify(request.PinCode, k.PinCodeHashed));
-            if (cakismaVarMi)
-                return ApiResponse<KullaniciResponse>.Hata("Bu PIN kodu başka bir kullanıcı tarafından kullanılıyor.");
-
             kullanici.PinCodeHashed = BCryptNet.HashPassword(request.PinCode);
         }
 
